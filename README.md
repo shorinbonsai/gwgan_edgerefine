@@ -12,12 +12,12 @@ This library is designed to be called directly from Python but executes its evol
 
 * **THADS-N Representation:** Implements the specific graph mutation operators (Toggle, Hop, Swap, Local Add/Delete, etc.) defined in *Representation for Evolution of Epidemic Models* (Dube et al.).  
 * **Parallel Execution:** Uses rayon to evaluate and mutate the entire population of graphs simultaneously across all CPU cores.  
-* **Seamless Python Integration:** Built with pyo3 and maturin for zero-overhead data transfer between PyTorch/NetworkX and Rust.
+* **Python Integration:** Built with pyo3 and maturin for zero-overhead data transfer between PyTorch/NetworkX and Rust.
 
 
 ## **Installation**
 
-### **For Researchers (Using Pre-built Wheels)**
+### **(Using Pre-built Wheels)**
 
 If you have been provided a .whl file, you do **not** need Rust installed. Simply run:
 
@@ -25,7 +25,7 @@ pip install rust\_graph\_refiner-0.1.0-cp38-abi3-manylinux\_2\_17\_x86\_64.whl
 
 *(Note: Replace the filename with the specific version provided to you).*
 
-### **For Developers (Building from Source)**
+### **(Building from Source)**
 
 To modify the Rust code, you need [Rust installed](https://rustup.rs/) and maturin.
 
@@ -38,42 +38,6 @@ To modify the Rust code, you need [Rust installed](https://rustup.rs/) and matur
 
    *The \--release flag is critical for Genetic Algorithm performance.*
 
-## **Usage Example**
-
-import torch  
-from rust\_graph\_refiner import GraphRefiner
-
-\# 1\. Prepare your data (e.g., from WGAN output)  
-\# Convert PyTorch edge\_index to list of tuples: \[\[u, v\], \[u, v\], ...\]  
-num\_nodes \= 50  
-edge\_index\_tensor \= ... \# shape \[2, num\_edges\]  
-edge\_list \= edge\_index\_tensor.t().tolist()
-
-\# 2\. Initialize the Refiner  
-\# population\_size: Number of candidate graphs  
-\# mutation\_rate: Probability of applying an operator  
-refiner \= GraphRefiner(population\_size=100, mutation\_rate=0.05)
-
-\# 3\. Load the initial graph state  
-refiner.load\_initial\_graph(num\_nodes, edge\_list)
-
-\# 4\. Run the Genetic Algorithm  
-\# Returns the best fitness score found  
-best\_score \= refiner.evolve(generations=50)  
-print(f"Best Fitness: {best\_score}")
-
-\# 5\. Retrieve the best graph  
-refined\_edges \= refiner.get\_best\_graph()
-
-\# Convert back to PyTorch for further processing  
-refined\_tensor \= torch.tensor(refined\_edges).t().contiguous()
-
-## **Directory Structure**
-
-* src/lib.rs: Python API entry point.  
-* src/graph.rs: Efficient graph data structure (Adjacency List).  
-* src/engine.rs: The Genetic Algorithm engine and parallel processing logic.  
-* src/operations.rs: Implementation of the THADS-N mutation operators.
 
 ## **Reference**
 
