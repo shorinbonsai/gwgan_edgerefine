@@ -1,49 +1,44 @@
 import torch
 import numpy as np
 import logging
+import sys
 
-# With maturin, the rust library is installed as a standard python package.
-# We no longer need to manually append sys.path.
+# Attempt to import the Rust extension
 try:
     import gwgan_edgerefine_rs
-except ImportError:
+except ImportError as e:
+    # We print a warning but don't crash, allowing the GAN to run without GA if needed.
+    print(f"\n[WARNING] Could not import Rust GA library: {e}")
+    print("Evolutionary refinement will be DISABLED.")
+    print("Ensure you have run 'python build_local.py' to compile the extension.\n")
     gwgan_edgerefine_rs = None
 
 class GARefiner:
     def __init__(self, config, dataset_stats):
-        """
-        config: Configuration object containing GA params.
-        dataset_stats: Tuple (node_stats, edge_stats) or similar.
-        """
         self.config = config
         self.logger = logging.getLogger(__name__)
         
         self.enabled = gwgan_edgerefine_rs is not None
-        if not self.enabled:
-            self.logger.warning(
-                "Rust GA library (gwgan_edgerefine_rs) not found. "
-                "Evolutionary refinement will be skipped. "
-                "Ensure you have installed the package via 'maturin develop' or 'pip install .'."
-            )
 
     def refine_batch(self, generated_graphs_batch, real_graphs_batch):
         """
         Refine a batch of PyG Data objects using the Rust GA.
-        
-        Args:
-            generated_graphs_batch (List[Data]): List of PyG Data objects (generated).
-            real_graphs_batch (List[Data]): List of PyG Data objects (real) to compute targets.
-        
-        Returns:
-            List[Data]: The refined graphs.
         """
         if not self.enabled:
             return generated_graphs_batch
 
         # 1. Compute Target Distributions (Average of real batch)
-        # We need the histograms for Degree and Clustering.
-        # We assume utils.compute_graph_stats is available.
-        from utils import compute_graph_stats
+        # Assuming utils.compute_graph_stats is available and imported correctly
+        # Depending on where main.py runs, imports might need adjustment. 
+        # We attempt a relative import fallback.
+        try:
+            from gwgan_edgerefine.utils import compute_graph_stats
+        except ImportError:
+            try:
+                from utils import compute_graph_stats
+            except ImportError:
+                self.logger.error("Could not import 'utils.compute_graph_stats'. Skipping refinement.")
+                return generated_graphs_batch
         
         # This returns a dictionary with 'degrees' and 'clustering' matrices (N_graphs x num_bins)
         real_stats = compute_graph_stats(real_graphs_batch, num_bins=self.config.num_bins)
@@ -72,7 +67,6 @@ class GARefiner:
                 pop_size = getattr(self.config, 'ga_pop_size', 20)
                 
                 # The Rust function returns a refined Adjacency Matrix
-                # Note: We cast to uint because Rust expects usize (which matches u64/uint on 64-bit systems)
                 refined_adj = gwgan_edgerefine_rs.refine_graph(
                     adj_mat.astype(np.uint), 
                     target_deg_hist,

@@ -1,13 +1,11 @@
 use pyo3::prelude::*;
 use numpy::{PyReadonlyArray2, PyReadonlyArray1, PyArray2, ToPyArray};
 use rand::prelude::*;
-use rand::seq::SliceRandom;
+use rand::seq::{SliceRandom, IndexedRandom}; // IndexedRandom is needed for .choose() in rand 0.9
 use rayon::prelude::*;
+use std::collections::HashSet;
 
-// -----------------------------------------------------------------------------
-//  Data Structures
-// -----------------------------------------------------------------------------
-
+/// A lightweight graph structure using Adjacency Lists for fast mutation and traversal.
 #[derive(Clone, Debug)]
 struct Graph {
     num_nodes: usize,
@@ -69,10 +67,11 @@ impl Graph {
 }
 
 // -----------------------------------------------------------------------------
-//  Mutations (Paper Implementation)
+//  Operations inspired by "Evolving Weighted Contact Networks..." (Table I)
+//  Adapted for Unweighted Graphs (as requested).
 // -----------------------------------------------------------------------------
-
 impl Graph {
+    /// Tries to apply a random mutation operation from the paper's list.
     fn mutate(&mut self, rng: &mut ThreadRng) {
         let ops = [
             "add", "delete", "toggle", 
@@ -80,12 +79,15 @@ impl Graph {
             "local_add", "local_delete", "local_toggle"
         ];
         
+        // Weights could be tuned or passed from config
         let op = ops.choose(rng).unwrap();
         let n = self.num_nodes;
         if n < 3 { return; }
 
         let u = rng.gen_range(0..n);
         let v = rng.gen_range(0..n);
+        
+        // Note: 'w' was unused in previous logic, removed to avoid warning
         
         match *op {
             "add" => { self.add_edge(u, v); },
@@ -95,7 +97,10 @@ impl Graph {
                 else { self.add_edge(u, v); }
             },
             "swap" => {
+                // Swap (p,q,r,s): If (p,q) & (r,s) exist -> del them, add (p,s) & (q,r)
                 if self.edges_count < 2 { return; }
+                
+                // Try to find two distinct edges
                 for _ in 0..5 {
                     let u = rng.gen_range(0..n);
                     if self.adj[u].is_empty() { continue; }
@@ -106,6 +111,7 @@ impl Graph {
                     let y = *self.adj[x].choose(rng).unwrap();
                     if y == u || y == v { continue; }
 
+                    // Apply Swap
                     self.remove_edge(u, v);
                     self.remove_edge(x, y);
                     self.add_edge(u, y);
@@ -114,6 +120,8 @@ impl Graph {
                 }
             },
             "hop" => {
+                // Hop(p,q,r): If (p,q) and (q,r) exist, and (p,r) does not.
+                // We pick 'u' as 'q' (the pivot)
                 if self.adj[u].len() < 2 { return; }
                 let p = *self.adj[u].choose(rng).unwrap();
                 let r = *self.adj[u].choose(rng).unwrap();
@@ -125,6 +133,7 @@ impl Graph {
                 }
             },
             "local_add" => {
+                // Local Add(p,q,r): If (p,q) and (q,r) exist -> Add (p,r) (Transitive closure)
                 if self.adj[u].len() < 2 { return; }
                 let p = *self.adj[u].choose(rng).unwrap();
                 let r = *self.adj[u].choose(rng).unwrap();
@@ -133,6 +142,7 @@ impl Graph {
                 }
             },
             "local_delete" => {
+                // Local Delete(p,q,r): If (p,q) and (q,r) exist -> Delete (p,r) if exists
                 if self.adj[u].len() < 2 { return; }
                 let p = *self.adj[u].choose(rng).unwrap();
                 let r = *self.adj[u].choose(rng).unwrap();
@@ -141,6 +151,7 @@ impl Graph {
                 }
             },
             "local_toggle" => {
+                 // Local Toggle
                 if self.adj[u].len() < 2 { return; }
                 let p = *self.adj[u].choose(rng).unwrap();
                 let r = *self.adj[u].choose(rng).unwrap();
@@ -171,6 +182,7 @@ fn compute_histogram(values: &[f32], bins: usize, min_val: f32, max_val: f32) ->
         hist[idx] += 1.0;
     }
 
+    // Normalize
     let sum: f32 = hist.iter().sum();
     if sum > 0.0 {
         for x in &mut hist { *x /= sum; }
@@ -179,10 +191,12 @@ fn compute_histogram(values: &[f32], bins: usize, min_val: f32, max_val: f32) ->
 }
 
 fn compute_graph_stats(graph: &Graph, num_bins: usize) -> (Vec<f32>, Vec<f32>) {
+    // 1. Degree Distribution
     let degrees: Vec<f32> = graph.adj.iter()
         .map(|neighbors| neighbors.len() as f32)
         .collect();
     
+    // 2. Clustering Coefficient
     let mut clustering = Vec::with_capacity(graph.num_nodes);
     for i in 0..graph.num_nodes {
         let neighbors = &graph.adj[i];
@@ -232,6 +246,7 @@ fn refine_graph(
     num_bins: usize
 ) -> PyResult<Py<PyArray2<usize>>> {
     
+    // 1. Convert Python Input to Rust Graph
     let shape = adj_matrix.shape();
     let rows = shape[0];
     let cols = shape[1];
@@ -241,7 +256,8 @@ fn refine_graph(
     let target_deg = target_degree_hist.as_slice()?;
     let target_clust = target_clust_hist.as_slice()?;
 
-    let mut rng = rand::thread_rng();
+    // 2. Initialize Population
+    let mut rng = rand::rng(); // rand 0.9.x uses rng() instead of thread_rng() commonly, though thread_rng() exists
     let mut population: Vec<Graph> = (0..population_size)
         .map(|_| {
             let mut g = base_graph.clone();
@@ -250,18 +266,19 @@ fn refine_graph(
         })
         .collect();
 
+    // 3. GA Loop
     for _gen in 0..generations {
         let mut scored_pop: Vec<(f32, Graph)> = population.par_iter().map(|g| {
             let (d_hist, c_hist) = compute_graph_stats(g, num_bins);
             let score_deg = compute_mse(&d_hist, target_deg);
             let score_clust = compute_mse(&c_hist, target_clust);
-            
             let score = score_deg + score_clust;
             (score, g.clone())
         }).collect();
 
         scored_pop.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
+        // Elitism: Keep top 20%
         let keep_count = std::cmp::max(1, population_size / 5);
         let mut new_pop = Vec::with_capacity(population_size);
         
@@ -269,10 +286,10 @@ fn refine_graph(
             new_pop.push(scored_pop[i].1.clone());
         }
 
+        // Mutation
         while new_pop.len() < population_size {
-            let parent_idx = rng.gen_range(0..keep_count); 
+            let parent_idx = rng.random_range(0..keep_count); // rand 0.9 API
             let mut child = new_pop[parent_idx].clone();
-            
             for _ in 0..2 {
                 child.mutate(&mut rng);
             }
@@ -281,14 +298,17 @@ fn refine_graph(
         population = new_pop;
     }
 
+    // 4. Return Best
     let result_adj = population[0].to_adjacency_matrix();
+    
+    // In pyo3 0.27, from_vec2 returns a Bound. We use unbind() to return Py<...>.
     let py_array = PyArray2::from_vec2(py, &result_adj).unwrap();
     
-    Ok(py_array.to_owned())
+    Ok(py_array.unbind())
 }
 
 #[pymodule]
-fn gwgan_edgerefine_rs(_py: Python, m: &PyModule) -> PyResult<()> {
+fn gwgan_edgerefine_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(refine_graph, m)?)?;
     Ok(())
 }
