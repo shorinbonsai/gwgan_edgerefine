@@ -23,7 +23,7 @@ If you have been provided a .whl file, you do **not** need Rust installed. Simpl
 
 pip install rust\_graph\_refiner-0.1.0-cp38-abi3-manylinux\_2\_17\_x86\_64.whl
 
-*(Note: Replace the filename with the specific version provided to you).*
+*(Note: Replace the filename with the specific version).*
 
 ### **(Building from Source)**
 
