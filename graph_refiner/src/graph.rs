@@ -2,7 +2,7 @@
 /// mutation operations defined in the paper.
 #[derive(Clone)]
 pub struct GraphState {
-    num_nodes: usize,
+    pub num_nodes: usize,
     // Adjacency list might be better for 'Hop' and 'Local' operations
     // which require checking neighbors of neighbors.
     adjacency: Vec<Vec<usize>>, 
@@ -52,5 +52,20 @@ impl GraphState {
             }
         }
         edges
+    }
+
+    pub fn get_neighbor_at_index(&self, node: usize, index: usize) -> Option<usize> {
+        let neighbors = &self.adjacency[node];
+        if neighbors.is_empty() {
+            None
+        } else {
+            Some(neighbors[index % neighbors.len()])
+        }
+    }
+    pub fn degree(&self, node: usize) -> usize {
+        if node >= self.num_nodes {
+            return 0;
+        }
+        self.adjacency[node].len()
     }
 }

@@ -80,16 +80,27 @@ impl GeneticOptimizer {
 
     /// Decode and apply the commands in `genome` to `base_graph` to produce
     /// a new graph.  The lower three bits of each command determine the
-    /// operation while the remaining bits can encode parameters.  The
-    /// current implementation ignores the parameters and instead applies
-    /// the operation using only a random number generator (as required
-    /// by the `GraphOperation::apply` trait).  The resulting graph is
+    /// operation while the remaining bits can encode parameters.   The resulting graph is
     /// returned.
     fn express(&self, genome: &[u64], base_graph: &GraphState) -> GraphState {
         let mut graph = base_graph.clone();
-        let mut rng = rand::thread_rng();
+        let num_nodes = base_graph.num_nodes;
+
         for &gene in genome {
             let op_code: u8 = (gene & 0b111) as u8;
+            let param_payload = gene >> 3;
+            // Decode 4 potential vertices (v1, v2, v3, v4) from the payload.
+            // We use modulo arithmetic to ensure they are ALWAYS valid indices [0, num_nodes).
+            // This replicates the 'block % verts' safety logic from C++ 'express'.
+            // Note: u64 has 64 bits. 3 bits for op = 61 bits payload.
+            // Even for 1 million nodes, we can easily fit 3-4 vertices.
+            let v1 = (param_payload % num_nodes as u64) as usize;
+            let v2 = ((param_payload / num_nodes as u64) % num_nodes as u64) as usize;
+            //Powers of num_nodes for v3 and v4
+            let v3 = ((param_payload / (num_nodes as u64).pow(2)) % num_nodes as u64) as usize;
+            let v4 = ((param_payload / (num_nodes as u64).pow(3)) % num_nodes as u64) as usize;
+            
+
             // Map op_code into an operation.  If the op_code is out of
             // range we skip the command.
             let operation = match op_code {
@@ -104,7 +115,7 @@ impl GeneticOptimizer {
                 _ => None,
             };
             if let Some(op) = operation {
-                op.apply(&mut graph, &mut rng);
+                op.apply(&mut graph, v1, v2, v3, v4);
             }
         }
         graph
