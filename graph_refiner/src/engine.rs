@@ -66,7 +66,7 @@ impl GeneticOptimizer {
             let mut genome = Vec::with_capacity(self.gene_length);
             for _ in 0..self.gene_length {
                 let op: u8 = rng.gen_range(0..8);
-                let param: u64 = rng.gen::<u32>() as u64;
+                let param: u64 = rng.r#gen::<u32>() as u64;
                 let cmd: u64 = (param << 3) | (op as u64);
                 genome.push(cmd);
             }
