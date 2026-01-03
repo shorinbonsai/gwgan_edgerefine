@@ -5,7 +5,6 @@ mod engine;
 
 use engine::GeneticOptimizer;
 
-/// This module is implemented in Rust.
 #[pymodule]
 fn rust_graph_refiner(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Add the main optimizer class to the module

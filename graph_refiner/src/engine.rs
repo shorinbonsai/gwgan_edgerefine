@@ -59,14 +59,14 @@ impl GeneticOptimizer {
         self.base_graph = Some(base);
 
         // Generate random genomes.
-        use rand::thread_rng;
-        let mut rng = thread_rng();
+        use rand::rng;
+        let mut rng = rng();
         self.population.clear();
         for _ in 0..self.population_size {
             let mut genome = Vec::with_capacity(self.gene_length);
             for _ in 0..self.gene_length {
-                let op: u8 = rng.gen_range(0..8);
-                let param: u64 = rng.r#gen::<u32>() as u64;
+                let op: u8 = rng.random_range(0..8);
+                let param: u64 = rng.random::<u32>() as u64;
                 let cmd: u64 = (param << 3) | (op as u64);
                 genome.push(cmd);
             }
