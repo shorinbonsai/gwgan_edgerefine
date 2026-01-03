@@ -6,10 +6,12 @@ mod engine;
 use engine::GeneticOptimizer;
 
 #[pymodule]
-fn rust_graph_refiner(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // Add the main optimizer class to the module
-    m.add_class::<GraphRefiner>()?;
-    Ok(())
+mod graph_refiner {
+    use super::*;
+
+    // Re-export the class; PyO3 automatically adds it to the module
+    #[pymodule_export]
+    use super::GraphRefiner;
 }
 
 /// The main interface called from Python.
