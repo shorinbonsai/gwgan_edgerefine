@@ -5,7 +5,7 @@ pub struct GraphState {
     pub num_nodes: usize,
     // Adjacency list might be better for 'Hop' and 'Local' operations
     // which require checking neighbors of neighbors.
-    adjacency: Vec<Vec<usize>>, 
+    adjacency: Vec<Vec<usize>>,
     pub fitness: f64,
 }
 
@@ -18,6 +18,13 @@ impl GraphState {
         }
     }
 
+    pub fn has_edge(&self, u: usize, v: usize) -> bool {
+        if u >= self.num_nodes || v >= self.num_nodes {
+            return false;
+        }
+        self.adjacency[u].contains(&v)
+    }
+
     pub fn set_edges(&mut self, edges: &[(usize, usize)]) {
         for (u, v) in edges {
             self.add_edge(*u, *v);
@@ -26,10 +33,10 @@ impl GraphState {
 
     pub fn add_edge(&mut self, u: usize, v: usize) {
         if u < self.num_nodes && v < self.num_nodes {
-             if !self.adjacency[u].contains(&v) {
-                 self.adjacency[u].push(v);
-                 self.adjacency[v].push(u); // Undirected
-             }
+            if !self.adjacency[u].contains(&v) {
+                self.adjacency[u].push(v);
+                self.adjacency[v].push(u); // Undirected
+            }
         }
     }
 
@@ -46,7 +53,8 @@ impl GraphState {
         let mut edges = Vec::new();
         for (u, neighbors) in self.adjacency.iter().enumerate() {
             for &v in neighbors {
-                if u < v { // Avoid duplicates for undirected graph
+                if u < v {
+                    // Avoid duplicates for undirected graph
                     edges.push((u, v));
                 }
             }
@@ -69,3 +77,4 @@ impl GraphState {
         self.adjacency[node].len()
     }
 }
+

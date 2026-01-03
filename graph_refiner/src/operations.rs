@@ -26,9 +26,10 @@ impl GraphOperation {
         }
     }
 
-  
     fn apply_toggle(&self, graph: &mut GraphState, p: usize, q: usize) {
-        if p == q {return;}
+        if p == q {
+            return;
+        }
         if graph.has_edge(p, q) {
             graph.remove_edge(p, q);
         } else {
@@ -47,14 +48,15 @@ impl GraphOperation {
             Some(nb) => nb,
             None => return,
         };
-        if v == nb2 {return;} // Avoid self-loop
+        if v == nb2 {
+            return;
+        } // Avoid self-loop
         // Step 3: Toggle edge between start (v) and end (nb2)
         if graph.has_edge(v, nb2) {
             graph.remove_edge(v, nb2);
         } else {
             graph.add_edge(v, nb2);
         }
-
     }
 
     fn apply_hop(&self, graph: &mut GraphState, v: usize, n1: usize, n2: usize) {
@@ -71,7 +73,9 @@ impl GraphOperation {
             Some(nb) => nb,
             None => return,
         };
-        if v == nb2 {return;} // Avoid self-loop
+        if v == nb2 {
+            return;
+        } // Avoid self-loop
         //Prevent hop if it closes a triangle(target edge exists)
         if graph.has_edge(v, nb2) {
             return;
@@ -82,7 +86,9 @@ impl GraphOperation {
 
     fn apply_add(&self, graph: &mut GraphState, p: usize, q: usize) {
         // Logic: Add edge (p,q) if it doesn't exist.
-        if p == q {return;}
+        if p == q {
+            return;
+        }
         if !graph.has_edge(p, q) {
             graph.add_edge(p, q);
         }
@@ -90,14 +96,16 @@ impl GraphOperation {
 
     fn apply_delete(&self, graph: &mut GraphState, p: usize, q: usize) {
         // Logic: Remove edge (p,q) if it exists.
-        if p == q {return;}
+        if p == q {
+            return;
+        }
         if graph.has_edge(p, q) {
             graph.remove_edge(p, q);
         }
     }
 
     fn apply_swap(&self, graph: &mut GraphState, v1: usize, v2: usize, n1: usize, n2: usize) {
-        // Logic: Edge swap (p,q) and (r,s) become (p,s) and (q,r) 
+        // Logic: Edge swap (p,q) and (r,s) become (p,s) and (q,r)
         // effectively preserving degree distribution.
         let min_degree = 2;
         if graph.degree(v1) < min_degree || graph.degree(v2) < min_degree {
@@ -134,7 +142,9 @@ impl GraphOperation {
             Some(nb) => nb,
             None => return,
         };
-        if v == nb2 {return;} // Avoid self-loop
+        if v == nb2 {
+            return;
+        } // Avoid self-loop
         // Add (v, nb2) only if it doesn't exist
         if !graph.has_edge(v, nb2) {
             graph.add_edge(v, nb2);
@@ -151,10 +161,13 @@ impl GraphOperation {
             Some(nb) => nb,
             None => return,
         };
-        if v == nb2 {return;}
+        if v == nb2 {
+            return;
+        }
         // Delete (v, nb2) only if it exists
         if graph.has_edge(v, nb2) {
             graph.remove_edge(v, nb2);
         }
     }
 }
+
