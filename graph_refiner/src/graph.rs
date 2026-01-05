@@ -5,7 +5,7 @@ pub struct GraphState {
     pub num_nodes: usize,
     // Adjacency list might be better for 'Hop' and 'Local' operations
     // which require checking neighbors of neighbors.
-    adjacency: Vec<Vec<usize>>,
+    pub adjacency: Vec<Vec<usize>>,
     pub fitness: f64,
 }
 

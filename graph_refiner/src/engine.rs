@@ -1,4 +1,5 @@
 use rand::Rng;
+use crate::stats::{degree_distribution, clustering_distribution, spectral_features, compute_mmd};
 use rayon::prelude::*;
 
 use crate::graph::GraphState;

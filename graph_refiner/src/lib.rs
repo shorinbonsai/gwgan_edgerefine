@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 mod graph;
 mod operations;
 mod engine;
+mod stats;
 
 use engine::GeneticOptimizer;
 

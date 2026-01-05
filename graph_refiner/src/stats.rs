@@ -4,7 +4,7 @@ use nalgebra::{DMatrix, SymmetricEigen};
 /// Compute the degree distribution histogram of the graph.
 /// Matches Python `utils.py` behavior: range is adaptive per graph.
 pub fn degree_distribution(graph: &GraphState, num_bins: usize) -> Vec<f64> {
-    if graph.num_nodes ==0 {return vec![0; num_bins];}
+    if graph.num_nodes ==0 {return vec![0.0; num_bins];}
     let degrees: Vec<usize> = (0..graph.num_nodes).map(|n| graph.degree(n)).collect();
     let local_max_degree = *degrees.iter().max().unwrap_or(&0);
 
