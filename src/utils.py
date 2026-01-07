@@ -26,11 +26,12 @@ import matplotlib.pyplot as plt
 # --------------------------
 #  Dataset Analysis
 # --------------------------
-def analyze_dataset_statistics(dataset: Iterable[Data], num_classes: int) -> Tuple[Dict, Dict]:
+def analyze_dataset_statistics(dataset: Iterable[Data], num_classes: int) -> Tuple[Dict, Dict, int]:
     """Analyze dataset statistics (per-class node/edge counts)."""
     class_node_stats = defaultdict(list)
     class_edge_stats = defaultdict(list)
 
+    max_degree = 0
     for graph in dataset:
         label = int(graph.y.item())
         num_nodes = graph.x.size(0)
@@ -39,6 +40,10 @@ def analyze_dataset_statistics(dataset: Iterable[Data], num_classes: int) -> Tup
 
         class_node_stats[label].append(num_nodes)
         class_edge_stats[label].append(num_edges)
+
+        if graph.edge_index.numel() > 0:
+            d = degree(graph.edge_index[0], num_nodes=graph.num_nodes)
+            max_degree = max(max_degree, int(d.max().item()))
 
     node_stats_summary = {}
     edge_stats_summary = {}
@@ -62,7 +67,7 @@ def analyze_dataset_statistics(dataset: Iterable[Data], num_classes: int) -> Tup
                 'std': float(edges.std())
             }
 
-    return node_stats_summary, edge_stats_summary
+    return node_stats_summary, edge_stats_summary, max_degree
 
 
 # --------------------------

@@ -63,10 +63,12 @@ def main():
     labels = list(range(dataset.num_classes))
 
     # Analyze statistics (returns node_stats, edge_stats)
-    dataset_stats = analyze_dataset_statistics(train_dataset, dataset.num_classes)
+    dataset_stats_result = analyze_dataset_statistics(train_dataset, dataset.num_classes)
+    dataset_stats = dataset_stats_result[:2]
     logger.info(f"Node Summary: {dataset_stats[0]}")
     logger.info(f"Edge Summary: {dataset_stats[1]}")
-    
+    # global_max_degree = dataset_stats_result[2] 
+    logger.info(f"Global Max Degree: {global_max_degree}")
 
     # Initialize models
     generator = Generator(config, dataset.num_classes, dataset.num_node_features).to(device)
