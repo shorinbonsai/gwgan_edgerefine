@@ -30,6 +30,22 @@ pub struct GeneticOptimizer {
     base_graph: Option<GraphState>,
     /// The best genome discovered so far.
     best_genome: Option<Vec<u64>>,
+    /// Target statistics for fitness evaluation.
+    target_degrees: Vec<Vec<f64>>,
+    degree_mean: Vec<f64>,
+    degree_std: Vec<f64>,
+    gamma_degree: f64,
+
+    target_clustering: Vec<Vec<f64>>,
+    clustering_mean: Vec<f64>,
+    clustering_std: Vec<f64>,
+    gamma_clustering: f64,
+
+    target_spectral: Vec<Vec<f64>>,
+    spectral_mean: Vec<f64>,
+    spectral_std: Vec<f64>,
+    gamma_spectral: f64,
+    weights: (f64, f64, f64), // (degree, clustering, spectral)
 }
 
 impl GeneticOptimizer {
@@ -44,6 +60,22 @@ impl GeneticOptimizer {
             gene_length,
             base_graph: None,
             best_genome: None,
+            target_degrees: Vec::new(),
+            degree_mean: Vec::new(),
+            degree_std: Vec::new(),
+            gamma_degree: 1.0, // Default to 1.0
+
+            target_clustering: Vec::new(),
+            clustering_mean: Vec::new(),
+            clustering_std: Vec::new(),
+            gamma_clustering: 1.0,
+
+            target_spectral: Vec::new(),
+            spectral_mean: Vec::new(),
+            spectral_std: Vec::new(),
+            gamma_spectral: 1.0,
+
+            weights: (0.0, 0.0, 0.0),
         }
     }
 
@@ -77,6 +109,34 @@ impl GeneticOptimizer {
         if let Some(genome) = self.population.first() {
             self.best_genome = Some(genome.clone());
         }
+    }
+
+    pub fn set_targets(
+        &mut self,
+        target_degrees: Vec<Vec<f64>>, degree_mean: Vec<f64>, degree_std: Vec<f64>,
+        target_clustering: Vec<Vec<f64>>, clustering_mean: Vec<f64>, clustering_std: Vec<f64>,
+        target_spectral: Vec<Vec<f64>>, spectral_mean: Vec<f64>, spectral_std: Vec<f64>,
+        weights: (f64, f64, f64),
+        gammas: (f64, f64, f64)
+    ) {
+        self.target_degrees = target_degrees;
+        self.degree_mean = degree_mean;
+        self.degree_std = degree_std;
+        
+        self.target_clustering = target_clustering;
+        self.clustering_mean = clustering_mean;
+        self.clustering_std = clustering_std;
+
+        self.target_spectral = target_spectral;
+        self.spectral_mean = spectral_mean;
+        self.spectral_std = spectral_std;
+
+        self.weights = weights;
+        
+        // Store gammas directly
+        self.gamma_degree = gammas.0;
+        self.gamma_clustering = gammas.1;
+        self.gamma_spectral = gammas.2;
     }
 
     /// Decode and apply the commands in `genome` to `base_graph` to produce
@@ -128,7 +188,6 @@ impl GeneticOptimizer {
     /// available via Rayon, but no selection, crossover or mutation is
     /// performed.  Returns `0.0` as a placeholder fitness score.
     pub fn evolve(&mut self, generations: usize) -> f64 {
-        let _ = generations; // generations are unused in the stub
         // Evaluate all genomes by expressing them.  In a complete
         // implementation you would compute a fitness score here.
         if let Some(ref base) = self.base_graph {
@@ -136,10 +195,39 @@ impl GeneticOptimizer {
                 let _graph = self.express(genome, base);
                 // compute fitness here
             });
-            // Choose the first genome as the best for now.
-            if let Some(genome) = self.population.first() {
-                self.best_genome = Some(genome.clone());
+            let mut best_fitness = -f64::INFINITY;
+
+            for _ in 0..generations {
+                // Evaluate population
+                // Note: par_iter() requires synchronization to write to best_genome.
+                // Common pattern: collect results then find max.
+                let results: Vec<(Vec<u64>, f64)> = self.population.par_iter().map(|genome| {
+                    let graph = self.express(genome, base);
+                    
+                    // 1. Extract Features
+                    let deg = crate::stats::degree_distribution(&graph, 10); // Ensure bins match Python
+                    let clust = crate::stats::clustering_distribution(&graph, 10);
+                    let spec = crate::stats::spectral_features(&graph, 10);
+
+                    // 2. Compute MMD (Minimize MMD = Maximize negative MMD)
+                    let score_deg = crate::stats::compute_mmd(&deg, &self.target_degrees, &self.degree_mean, &self.degree_std, self.gamma_degree);
+                    let score_clust = crate::stats::compute_mmd(&clust, &self.target_clustering, &self.clustering_mean, &self.clustering_std, self.gamma_clustering);
+                    let score_spec = crate::stats::compute_mmd(&spec, &self.target_spectral, &self.spectral_mean, &self.spectral_std, self.gamma_spectral);
+
+                    let total_score = (score_deg * self.weights.0) + (score_clust * self.weights.1) + (score_spec * self.weights.2);
+                    
+                    (genome.clone(), total_score)
+                }).collect();
+
+                // Find best
+                for (genome, score) in results {
+                    if score > best_fitness {
+                        best_fitness = score;
+                        self.best_genome = Some(genome);
+                    }
+                }
             }
+            return best_fitness;
         }
         0.0
     }

@@ -41,6 +41,22 @@ impl GraphRefiner {
         self.optimizer.initialize_population(num_nodes, edge_index);
     }
 
+    fn set_target_statistics(
+        &mut self,
+        target_degrees: Vec<Vec<f64>>, degree_mean: Vec<f64>, degree_std: Vec<f64>,
+        target_clustering: Vec<Vec<f64>>, clust_mean: Vec<f64>, clust_std: Vec<f64>,
+        target_spectral: Vec<Vec<f64>>, spec_mean: Vec<f64>, spec_std: Vec<f64>,
+        weights: (f64, f64, f64),
+        gammas: (f64, f64, f64) // Added gammas argument
+    ) {
+        self.optimizer.set_targets(
+            target_degrees, degree_mean, degree_std,
+            target_clustering, clust_mean, clust_std,
+            target_spectral, spec_mean, spec_std,
+            weights, gammas
+        );
+    }
+
     /// Run the genetic algorithm for a set number of generations.  Returns
     /// the best fitness score achieved in this run.  The current
     /// implementation does not compute a real fitness and always returns

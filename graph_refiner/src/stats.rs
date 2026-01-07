@@ -104,7 +104,7 @@ pub fn compute_mmd(
     targets_normalized: &[Vec<f64>], 
     target_mean: &[f64], 
     target_std: &[f64],
-    sigma: f64
+    gamma: f64
 ) -> f64 {
     if targets_normalized.is_empty() { return 0.0; }
     
@@ -112,17 +112,18 @@ pub fn compute_mmd(
     let candidate_norm: Vec<f64> = candidate.iter()
         .zip(target_mean.iter())
         .zip(target_std.iter())
-        .map(|((&val, &mu), &sigma)| (val - mu) / sigma)
+        .map(|((&val, &mu), &std_dev)| (val - mu) / std_dev)
         .collect();
 
     let n = targets_normalized.len();
-    let gamma = 1.0 / (2.0 * sigma * sigma); 
     
     let mut sum_k_xy = 0.0;
     for target in targets_normalized {
+        // Calculate squared Euclidean distance
         let dist_sq: f64 = candidate_norm.iter().zip(target.iter())
             .map(|(a, b)| (a - b).powi(2))
             .sum();
+        // RBF Kernel: exp(-gamma * ||x - y||^2)
         sum_k_xy += (-gamma * dist_sq).exp();
     }
     
