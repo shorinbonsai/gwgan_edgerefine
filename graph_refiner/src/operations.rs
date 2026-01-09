@@ -9,6 +9,7 @@ pub enum GraphOperation {
     Swap,
     LocalAdd,
     LocalDelete,
+    Null,
 }
 
 impl GraphOperation {
@@ -23,6 +24,7 @@ impl GraphOperation {
             GraphOperation::Swap => self.apply_swap(graph, v1, v2, v3, v4),
             GraphOperation::LocalAdd => self.apply_local_add(graph, v1, v2, v3),
             GraphOperation::LocalDelete => self.apply_local_delete(graph, v1, v2, v3),
+            GraphOperation::Null => {},
         }
     }
 

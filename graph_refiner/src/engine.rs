@@ -1,4 +1,6 @@
 use rand::Rng;
+use rand::distr::weighted::WeightedIndex;
+use rand::distr::Distribution;
 use crate::stats::{degree_distribution, clustering_distribution, spectral_features, compute_mmd};
 use rayon::prelude::*;
 
@@ -46,6 +48,7 @@ pub struct GeneticOptimizer {
     spectral_std: Vec<f64>,
     gamma_spectral: f64,
     weights: (f64, f64, f64), // (degree, clustering, spectral)
+    op_weights: Vec<f64>,
 }
 
 impl GeneticOptimizer {
@@ -76,7 +79,17 @@ impl GeneticOptimizer {
             gamma_spectral: 1.0,
 
             weights: (0.0, 0.0, 0.0),
+            op_weights: vec![1.0; 9], // Equal weights for 9 operations
         }
+    }
+
+    /// Set the weights for the operators (0..8).
+    /// This should be called from Python immediately after creation.
+    pub fn set_op_weights(&mut self, weights: Vec<f64>) {
+        if weights.len() != 9 {
+             panic!("Must provide exactly 9 weights (0-7 Ops + 8 Null)");
+        }
+        self.op_weights = weights;
     }
 
     /// Initialize the population.  This method takes the number of nodes and
@@ -94,13 +107,18 @@ impl GeneticOptimizer {
         // Generate random genomes.
         use rand::rng;
         let mut rng = rng();
+
+        // Create the weighted distribution based on input densities
+        let dist = WeightedIndex::new(&self.op_weights)
+            .expect("Invalid weights provided (e.g., all zero)");
+
         self.population.clear();
         for _ in 0..self.population_size {
             let mut genome = Vec::with_capacity(self.gene_length);
             for _ in 0..self.gene_length {
-                let op: u8 = rng.random_range(0..8);
+                let op: u64 = dist.sample(&mut rng) as u64;
                 let param: u64 = rng.random::<u32>() as u64;
-                let cmd: u64 = (param << 3) | (op as u64);
+                let cmd: u64 = (param << 4) | (op as u64);
                 genome.push(cmd);
             }
             self.population.push(genome);
@@ -148,8 +166,8 @@ impl GeneticOptimizer {
         let num_nodes = base_graph.num_nodes;
 
         for &gene in genome {
-            let op_code: u8 = (gene & 0b111) as u8;
-            let param_payload = gene >> 3;
+            let op_code: u8 = (gene & 0xF) as u8;
+            let param_payload = gene >> 4;
             // Decode 4 potential vertices (v1, v2, v3, v4) from the payload.
             // We use modulo arithmetic to ensure they are ALWAYS valid indices [0, num_nodes).
             // This replicates the 'block % verts' safety logic from C++ 'express'.
@@ -173,6 +191,7 @@ impl GeneticOptimizer {
                 5 => Some(GraphOperation::Swap),
                 6 => Some(GraphOperation::LocalAdd),
                 7 => Some(GraphOperation::LocalDelete),
+                8 => Some(GraphOperation::Null),
                 _ => None,
             };
             if let Some(op) = operation {
