@@ -15,10 +15,7 @@ use crate::operations::GraphOperation;
 /// vector of encoded commands.  Each command encodes both the THADS‑N
 /// operation to perform and a free parameter.  During `initialize_population`
 /// the genomes are randomly generated.  The `express` method applies the
-/// sequence of commands to a base graph to produce a phenotype graph.  For
-/// now selection, crossover and mutation are not implemented; the algorithm
-/// simply evaluates the genomes by expressing them and keeps track of the
-/// best genome seen.
+/// sequence of commands to a base graph to produce a phenotype graph. 
 pub struct GeneticOptimizer {
     /// The population of genomes.  Each genome is a vector of u64 encoded
     /// commands.  The lower three bits encode the operator (0‒7) and the
