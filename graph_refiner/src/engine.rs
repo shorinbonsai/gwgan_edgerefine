@@ -1,6 +1,8 @@
-use rand::Rng;
+use rand::{Rng, SeedableRng};
 use rand::distr::weighted::WeightedIndex;
 use rand::distr::Distribution;
+use rand::seq::IndexedRandom;
+use rand_chacha::ChaCha8Rng;
 use crate::stats::{degree_distribution, clustering_distribution, spectral_features, compute_mmd};
 use rayon::prelude::*;
 
@@ -92,21 +94,26 @@ impl GeneticOptimizer {
         self.op_weights = weights;
     }
 
+    fn generate_gene<R: Rng>(rng: &mut R, dist: &WeightedIndex<f64>) -> u64 {
+        let op: u64 = dist.sample(rng) as u64;
+        let param: u64 = rng.random::<u32>() as u64;
+        (param << 4) | op
+    }
+
     /// Initialize the population.  This method takes the number of nodes and
     /// the edge list of the initial graph produced by the WGAN.  It sets
     /// `base_graph` accordingly and generates `population_size` random
     /// genomes.  Each command in a genome is formed by combining a random
     /// operator (0‒7) with a random 32‑bit parameter encoded in the upper
     /// bits.  The best genome is initialized to the first genome.
-    pub fn initialize_population(&mut self, num_nodes: usize, initial_edges: Vec<(usize, usize)>) {
+    pub fn initialize_population(&mut self, num_nodes: usize, initial_edges: Vec<(usize, usize)>, seed: u64) {
         // Build the base graph used as the starting point for all genomes.
         let mut base = GraphState::new(num_nodes);
         base.set_edges(&initial_edges);
         self.base_graph = Some(base);
 
-        // Generate random genomes.
-        use rand::rng;
-        let mut rng = rng();
+        // Seed the RNG deterministically
+        let mut rng = ChaCha8Rng::seed_from_u64(seed);
 
         // Create the weighted distribution based on input densities
         let dist = WeightedIndex::new(&self.op_weights)
@@ -116,10 +123,7 @@ impl GeneticOptimizer {
         for _ in 0..self.population_size {
             let mut genome = Vec::with_capacity(self.gene_length);
             for _ in 0..self.gene_length {
-                let op: u64 = dist.sample(&mut rng) as u64;
-                let param: u64 = rng.random::<u32>() as u64;
-                let cmd: u64 = (param << 4) | (op as u64);
-                genome.push(cmd);
+                genome.push(Self::generate_gene(&mut rng, &dist));
             }
             self.population.push(genome);
         }
@@ -201,54 +205,146 @@ impl GeneticOptimizer {
         graph
     }
 
-    /// Run the genetic algorithm for a given number of generations.  The
-    /// current implementation simply expresses the genomes relative to the
-    /// base graph and records the first genome as the best.  Parallelism is
-    /// available via Rayon, but no selection, crossover or mutation is
-    /// performed.  Returns `0.0` as a placeholder fitness score.
-    pub fn evolve(&mut self, generations: usize) -> f64 {
-        // Evaluate all genomes by expressing them.  In a complete
-        // implementation you would compute a fitness score here.
-        if let Some(ref base) = self.base_graph {
-            self.population.par_iter().for_each(|genome| {
-                let _graph = self.express(genome, base);
-                // compute fitness here
-            });
-            let mut best_fitness = -f64::INFINITY;
+    /// Calculates fitness (Error Score).
+    /// Returns a positive float where LOWER is BETTER.
+    fn calculate_fitness(&self, genome: &[u64], base: &GraphState) -> f64 {
+        let graph = self.express(genome, base);
+        
+        let deg = crate::stats::degree_distribution(&graph, 10);
+        let clust = crate::stats::clustering_distribution(&graph, 10);
+        let spec = crate::stats::spectral_features(&graph, 10);
 
-            for _ in 0..generations {
-                // Evaluate population
-                // Note: par_iter() requires synchronization to write to best_genome.
-                // Common pattern: collect results then find max.
-                let results: Vec<(Vec<u64>, f64)> = self.population.par_iter().map(|genome| {
-                    let graph = self.express(genome, base);
-                    
-                    // 1. Extract Features
-                    let deg = crate::stats::degree_distribution(&graph, 10); // Ensure bins match Python
-                    let clust = crate::stats::clustering_distribution(&graph, 10);
-                    let spec = crate::stats::spectral_features(&graph, 10);
+        // MMD is a distance/divergence. Smaller is better.
+        let score_deg = crate::stats::compute_mmd(&deg, &self.target_degrees, &self.degree_mean, &self.degree_std, self.gamma_degree);
+        let score_clust = crate::stats::compute_mmd(&clust, &self.target_clustering, &self.clustering_mean, &self.clustering_std, self.gamma_clustering);
+        let score_spec = crate::stats::compute_mmd(&spec, &self.target_spectral, &self.spectral_mean, &self.spectral_std, self.gamma_spectral);
 
-                    // 2. Compute MMD (Minimize MMD = Maximize negative MMD)
-                    let score_deg = crate::stats::compute_mmd(&deg, &self.target_degrees, &self.degree_mean, &self.degree_std, self.gamma_degree);
-                    let score_clust = crate::stats::compute_mmd(&clust, &self.target_clustering, &self.clustering_mean, &self.clustering_std, self.gamma_clustering);
-                    let score_spec = crate::stats::compute_mmd(&spec, &self.target_spectral, &self.spectral_mean, &self.spectral_std, self.gamma_spectral);
+        // Weighted Sum of Errors
+        (score_deg * self.weights.0) + (score_clust * self.weights.1) + (score_spec * self.weights.2)
+    }
 
-                    let total_score = (score_deg * self.weights.0) + (score_clust * self.weights.1) + (score_spec * self.weights.2);
-                    
-                    (genome.clone(), total_score)
-                }).collect();
+    /// Tournament Selection: Picks `k` random individuals and returns the best one.
+    /// MINIMIZATION: Returns the individual with the LOWEST fitness score.
+    fn tournament_select<R: Rng>(
+        population: &[Vec<u64>], 
+        fitnesses: &[f64], 
+        k: usize, 
+        rng: &mut R
+    ) -> Vec<u64> {
+        let mut best_idx = 0;
+        let mut best_fit = f64::INFINITY;
+        
+        for _ in 0..k {
+            let idx = rng.random_range(0..population.len());
+            if fitnesses[idx] < best_fit {
+                best_fit = fitnesses[idx];
+                best_idx = idx;
+            }
+        }
+        population[best_idx].clone()
+    }
 
-                // Find best
-                for (genome, score) in results {
-                    if score > best_fitness {
-                        best_fitness = score;
-                        self.best_genome = Some(genome);
-                    }
+    /// Two-Point Crossover: Swaps segments between parents.
+    fn crossover<R: Rng>(p1: &[u64], p2: &[u64], rng: &mut R) -> (Vec<u64>, Vec<u64>) {
+        let len = p1.len();
+        let mut c1 = p1.to_vec();
+        let mut c2 = p2.to_vec();
+
+        if len < 2 { return (c1, c2); }
+
+        let pt1 = rng.random_range(0..len);
+        let pt2 = rng.random_range(0..len);
+        let (start, end) = if pt1 < pt2 { (pt1, pt2) } else { (pt2, pt1) };
+
+        for i in start..end {
+            c1[i] = p2[i];
+            c2[i] = p1[i];
+        }
+        (c1, c2)
+    }
+
+    /// Mutation: Replaces 1 to MNM genes with new random ones.
+    fn mutate<R: Rng>(genome: &mut Vec<u64>, rng: &mut R, dist: &WeightedIndex<f64>) {
+        let mnm = 4; // Max mutations, matching C++
+        let num_mutations = rng.random_range(1..=mnm);
+        
+        for _ in 0..num_mutations {
+            let idx = rng.random_range(0..genome.len());
+            genome[idx] = Self::generate_gene(rng, dist);
+        }
+    }
+
+    pub fn evolve(&mut self, generations: usize, seed: u64) -> f64 {
+        if self.base_graph.is_none() { return f64::INFINITY; }
+        let base = self.base_graph.as_ref().unwrap();
+
+        let tournament_size = 5; 
+        let mut best_overall_error = f64::INFINITY; 
+        let op_weights = self.op_weights.clone();
+
+        for g in 0..generations {
+            // 1. Evaluate Fitness
+            let fitness_results: Vec<(usize, f64)> = self.population.par_iter().enumerate().map(|(i, genome)| {
+                let score = self.calculate_fitness(genome, base);
+                (i, score)
+            }).collect();
+
+            // 2. Process Results (Minimization)
+            let mut fitnesses = vec![0.0; self.population.len()];
+            let mut min_gen_error = f64::INFINITY;
+            let mut best_gen_idx = 0;
+
+            for (i, err) in fitness_results {
+                fitnesses[i] = err;
+                if err < min_gen_error {
+                    min_gen_error = err;
+                    best_gen_idx = i;
                 }
             }
-            return best_fitness;
+
+            if min_gen_error < best_overall_error {
+                best_overall_error = min_gen_error;
+                self.best_genome = Some(self.population[best_gen_idx].clone());
+            }
+
+            // 3. Selection & Reproduction
+            let old_pop = &self.population; 
+            
+            let new_population: Vec<Vec<u64>> = (0..self.population_size / 2)
+                .into_par_iter()
+                .map(|i| {
+                    let task_seed = seed
+                        .wrapping_add((g as u64).wrapping_mul(1_000_000))
+                        .wrapping_add(i as u64);
+                    
+                    let mut rng = ChaCha8Rng::seed_from_u64(task_seed);
+                    let dist = WeightedIndex::new(&op_weights).unwrap();
+
+                    let p1 = Self::tournament_select(old_pop, &fitnesses, tournament_size, &mut rng);
+                    let p2 = Self::tournament_select(old_pop, &fitnesses, tournament_size, &mut rng);
+
+                    let (mut c1, mut c2) = Self::crossover(&p1, &p2, &mut rng);
+
+                    Self::mutate(&mut c1, &mut rng, &dist);
+                    Self::mutate(&mut c2, &mut rng, &dist);
+
+                    vec![c1, c2]
+                })
+                .flatten()
+                .collect();
+
+            self.population = new_population;
+
+            // 4. Elitism
+            if self.population.len() > self.population_size {
+                self.population.truncate(self.population_size);
+            }
+            if let Some(ref best) = self.best_genome {
+                self.population[0] = best.clone();
+            }
         }
-        0.0
+
+        best_overall_error
     }
 
     /// Reconstruct the best graph discovered so far and return its edge list.
