@@ -281,33 +281,56 @@ impl GeneticOptimizer {
 
         for g in 0..generations {
             // 1. Evaluate Fitness
-            let fitness_results: Vec<(usize, f64)> = self.population.par_iter().enumerate().map(|(i, genome)| {
+            let mut fitness_results: Vec<(usize, f64)> = self.population.par_iter().enumerate().map(|(i, genome)| {
                 let score = self.calculate_fitness(genome, base);
                 (i, score)
             }).collect();
 
             // 2. Process Results (Minimization)
+            // Sort by fitness (ascending error) to find the top 2 elites
+            fitness_results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
             let mut fitnesses = vec![0.0; self.population.len()];
-            let mut min_gen_error = f64::INFINITY;
-            let mut best_gen_idx = 0;
-
-            for (i, err) in fitness_results {
-                fitnesses[i] = err;
-                if err < min_gen_error {
-                    min_gen_error = err;
-                    best_gen_idx = i;
-                }
+            for &(idx, score) in &fitness_results {
+                fitnesses[idx] = score;
             }
 
-            if min_gen_error < best_overall_error {
-                best_overall_error = min_gen_error;
-                self.best_genome = Some(self.population[best_gen_idx].clone());
+            // Update global best if the current generation's best is superior
+            let current_best_error = fitness_results[0].1;
+            if current_best_error < best_overall_error {
+                best_overall_error = current_best_error;
+                self.best_genome = Some(self.population[fitness_results[0].0].clone());
             }
 
-            // 3. Selection & Reproduction
+            // 3. Identification of Elites
+            // We clone the two best individuals from the current population
+            let elite1 = self.population[fitness_results[0].0].clone();
+            let elite2 = self.population[fitness_results[1].0].clone();
+
+            // 4. Selection & Reproduction (Parallel)
             let old_pop = &self.population; 
             
-            let new_population: Vec<Vec<u64>> = (0..self.population_size / 2)
+            // Calculate how many pairs we need to generate to fill the rest of the population.
+            // We have 2 elites, so we need (N - 2) new individuals.
+            // Since each loop produces 2 children, we run (N - 2) / 2 iterations.
+            let num_pairs = (self.population_size.saturating_sub(2)) / 2;
+
+            // let mut min_gen_error = f64::INFINITY;
+            // let mut best_gen_idx = 0;
+
+            // for (i, err) in fitness_results {
+            //     fitnesses[i] = err;
+            //     if err < min_gen_error {
+            //         min_gen_error = err;
+            //         best_gen_idx = i;
+            //     }
+            // }
+
+            // if min_gen_error < best_overall_error {
+            //     best_overall_error = min_gen_error;
+            //     self.best_genome = Some(self.population[best_gen_idx].clone());
+            // }
+
+            let offspring: Vec<Vec<u64>> = (0..num_pairs)
                 .into_par_iter()
                 .map(|i| {
                     let task_seed = seed
@@ -330,15 +353,26 @@ impl GeneticOptimizer {
                 .flatten()
                 .collect();
 
-            self.population = new_population;
+            // 5. Construct New Population
+            // Insert elites at the beginning, then extend with the parallel offspring.
+            let mut new_population = Vec::with_capacity(self.population_size);
+            new_population.push(elite1);
+            new_population.push(elite2);
+            new_population.extend(offspring);
 
-            // 4. Elitism
-            if self.population.len() > self.population_size {
-                self.population.truncate(self.population_size);
+            // Handle edge case: if population_size was odd, we might be 1 short due to integer division.
+            while new_population.len() < self.population_size {
+                 if let Some(ref best) = self.best_genome {
+                     new_population.push(best.clone());
+                 } else {
+                     // Fallback if no best genome (rare)
+                     new_population.push(new_population[0].clone());
+                 }
             }
-            if let Some(ref best) = self.best_genome {
-                self.population[0] = best.clone();
-            }
+
+            self.population = new_population;
+            
+
         }
 
         best_overall_error
