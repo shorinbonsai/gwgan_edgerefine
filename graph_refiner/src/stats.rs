@@ -126,7 +126,8 @@ pub fn compute_mmd(
         // RBF Kernel: exp(-gamma * ||x - y||^2)
         sum_k_xy += (-gamma * dist_sq).exp();
     }
-    
-    // Return negative similarity (minimization objective)
-    -(sum_k_xy / n as f64)
+
+    // Return 1.0 - Average Similarity so that 0.0 is perfect and values are positive.
+    1.0 - (sum_k_xy / n as f64)    
+
 }

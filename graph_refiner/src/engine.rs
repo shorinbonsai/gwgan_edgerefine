@@ -6,8 +6,22 @@ use rand_chacha::ChaCha8Rng;
 use crate::stats::{degree_distribution, clustering_distribution, spectral_features, compute_mmd};
 use rayon::prelude::*;
 
+use std::fs::File;
+use std::io::{Write, BufWriter, Result as IoResult};
+
 use crate::graph::GraphState;
 use crate::operations::GraphOperation;
+
+
+
+#[derive(Clone, Debug)]
+pub struct GenerationStats {
+    pub generation: usize,
+    pub min_fitness: f64,
+    pub mean_fitness: f64,
+    pub std_dev: f64,
+}
+
 
 /// A genetic optimizer that represents each individual as a command string.
 ///
@@ -48,6 +62,7 @@ pub struct GeneticOptimizer {
     gamma_spectral: f64,
     weights: (f64, f64, f64), // (degree, clustering, spectral)
     op_weights: Vec<f64>,
+    pub history: Vec<GenerationStats>,
 }
 
 impl GeneticOptimizer {
@@ -79,6 +94,7 @@ impl GeneticOptimizer {
 
             weights: (0.0, 0.0, 0.0),
             op_weights: vec![1.0; 9], // Equal weights for 9 operations
+            history: Vec::new(),
         }
     }
 
@@ -108,6 +124,7 @@ impl GeneticOptimizer {
         let mut base = GraphState::new(num_nodes);
         base.set_edges(&initial_edges);
         self.base_graph = Some(base);
+        self.history.clear();
 
         // Seed the RNG deterministically
         let mut rng = ChaCha8Rng::seed_from_u64(seed);
@@ -272,6 +289,9 @@ impl GeneticOptimizer {
     }
 
     pub fn evolve(&mut self, generations: usize, seed: u64) -> f64 {
+        if self.population_size < 2 {
+            panic!("Population size must be at least 2 for crossover to function.");
+        }
         if self.base_graph.is_none() { return f64::INFINITY; }
         let base = self.base_graph.as_ref().unwrap();
 
@@ -280,59 +300,75 @@ impl GeneticOptimizer {
         let op_weights = self.op_weights.clone();
 
         for g in 0..generations {
-            // 1. Evaluate Fitness
+            // 1. Evaluate Fitness (Parallel)
             let mut fitness_results: Vec<(usize, f64)> = self.population.par_iter().enumerate().map(|(i, genome)| {
                 let score = self.calculate_fitness(genome, base);
                 (i, score)
             }).collect();
 
-            // 2. Process Results (Minimization)
-            // Sort by fitness (ascending error) to find the top 2 elites
+            // 2. Sort by fitness (Ascending Error / Minimization)
+            // The best individual (lowest error) will be at index 0.
             fitness_results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
-            let mut fitnesses = vec![0.0; self.population.len()];
-            for &(idx, score) in &fitness_results {
-                fitnesses[idx] = score;
-            }
+            
+            // ------------------------------------------------------------
+            // LOGGING & STATISTICS
+            // ------------------------------------------------------------
+            let min_fit = fitness_results[0].1;
+            
+            let sum_fit: f64 = fitness_results.iter().map(|x| x.1).sum();
+            let count = fitness_results.len() as f64;
+            let mean_fit = sum_fit / count;
+            
+            // Calculate Standard Deviation
+            let variance: f64 = fitness_results.iter().map(|x| (x.1 - mean_fit).powi(2)).sum::<f64>() / count;
+            let std_dev = variance.sqrt();
 
-            // Update global best if the current generation's best is superior
-            let current_best_error = fitness_results[0].1;
-            if current_best_error < best_overall_error {
-                best_overall_error = current_best_error;
+            // Push to History
+            self.history.push(GenerationStats {
+                generation: g,
+                min_fitness: min_fit,
+                mean_fitness: mean_fit,
+                std_dev: std_dev,
+            });
+
+            // ------------------------------------------------------------
+            // UPDATE BEST INDIVIDUAL
+            // ------------------------------------------------------------
+            if min_fit < best_overall_error {
+                best_overall_error = min_fit;
+                // fitness_results[0].0 holds the original index of the best genome
                 self.best_genome = Some(self.population[fitness_results[0].0].clone());
             }
 
-            // 3. Identification of Elites
-            // We clone the two best individuals from the current population
+            // ------------------------------------------------------------
+            // ELITISM
+            // ------------------------------------------------------------
+            // Keep the top 2 best individuals
             let elite1 = self.population[fitness_results[0].0].clone();
             let elite2 = self.population[fitness_results[1].0].clone();
 
-            // 4. Selection & Reproduction (Parallel)
+            // ------------------------------------------------------------
+            // SELECTION PREPARATION
+            // ------------------------------------------------------------
+            // Flatten the (index, score) tuples into a simple vector of scores
+            // mapped to their original indices for the tournament selection.
+            let mut fitnesses = vec![0.0; self.population_size];
+            for &(i, f) in &fitness_results {
+                fitnesses[i] = f;
+            }
+
+            // ------------------------------------------------------------
+            // PARALLEL REPRODUCTION
+            // ------------------------------------------------------------
             let old_pop = &self.population; 
             
-            // Calculate how many pairs we need to generate to fill the rest of the population.
-            // We have 2 elites, so we need (N - 2) new individuals.
-            // Since each loop produces 2 children, we run (N - 2) / 2 iterations.
-            let num_pairs = (self.population_size.saturating_sub(2)) / 2;
-
-            // let mut min_gen_error = f64::INFINITY;
-            // let mut best_gen_idx = 0;
-
-            // for (i, err) in fitness_results {
-            //     fitnesses[i] = err;
-            //     if err < min_gen_error {
-            //         min_gen_error = err;
-            //         best_gen_idx = i;
-            //     }
-            // }
-
-            // if min_gen_error < best_overall_error {
-            //     best_overall_error = min_gen_error;
-            //     self.best_genome = Some(self.population[best_gen_idx].clone());
-            // }
+            // We need (N - 2) new individuals. Each task produces 2 children.
+            let num_pairs = (self.population_size - 2) / 2;
 
             let offspring: Vec<Vec<u64>> = (0..num_pairs)
                 .into_par_iter()
                 .map(|i| {
+                    // Unique seed per task to ensure thread safety and randomness
                     let task_seed = seed
                         .wrapping_add((g as u64).wrapping_mul(1_000_000))
                         .wrapping_add(i as u64);
@@ -340,11 +376,12 @@ impl GeneticOptimizer {
                     let mut rng = ChaCha8Rng::seed_from_u64(task_seed);
                     let dist = WeightedIndex::new(&op_weights).unwrap();
 
+                    // Select Parents
                     let p1 = Self::tournament_select(old_pop, &fitnesses, tournament_size, &mut rng);
                     let p2 = Self::tournament_select(old_pop, &fitnesses, tournament_size, &mut rng);
 
+                    // Cross & Mutate
                     let (mut c1, mut c2) = Self::crossover(&p1, &p2, &mut rng);
-
                     Self::mutate(&mut c1, &mut rng, &dist);
                     Self::mutate(&mut c2, &mut rng, &dist);
 
@@ -353,26 +390,23 @@ impl GeneticOptimizer {
                 .flatten()
                 .collect();
 
-            // 5. Construct New Population
-            // Insert elites at the beginning, then extend with the parallel offspring.
+            // ------------------------------------------------------------
+            // CONSTRUCT NEW POPULATION
+            // ------------------------------------------------------------
             let mut new_population = Vec::with_capacity(self.population_size);
             new_population.push(elite1);
             new_population.push(elite2);
             new_population.extend(offspring);
 
-            // Handle edge case: if population_size was odd, we might be 1 short due to integer division.
+            // Fill any remaining slots (in case population size was odd)
             while new_population.len() < self.population_size {
                  if let Some(ref best) = self.best_genome {
                      new_population.push(best.clone());
                  } else {
-                     // Fallback if no best genome (rare)
                      new_population.push(new_population[0].clone());
                  }
             }
-
             self.population = new_population;
-            
-
         }
 
         best_overall_error
@@ -386,5 +420,49 @@ impl GeneticOptimizer {
             return graph.get_edge_list();
         }
         Vec::new()
+    }
+
+    pub fn get_best_genome(&self) -> Vec<u64> {
+        self.best_genome.clone().unwrap_or_default()
+    }
+
+    /// Saves the evolution log to a CSV file.
+    pub fn save_logs(&self, filename: &str) -> IoResult<()> {
+        let file = File::create(filename)?;
+        let mut writer = BufWriter::new(file);
+        
+        writeln!(writer, "Generation,MinFitness,MeanFitness,StdDev")?;
+        for stat in &self.history {
+            writeln!(writer, "{},{:.6},{:.6},{:.6}", 
+                stat.generation, stat.min_fitness, stat.mean_fitness, stat.std_dev)?;
+        }
+        Ok(())
+    }
+
+    /// Saves the best result to a text file.
+    pub fn save_results(&self, filename: &str) -> IoResult<()> {
+        let file = File::create(filename)?;
+        let mut writer = BufWriter::new(file);
+        
+        let gene = self.get_best_genome();
+        let edges = self.get_best_edges();
+
+        writeln!(writer, "Best Individual Results")?;
+        writeln!(writer, "=======================")?;
+        writeln!(writer, "Gene Length: {}", gene.len())?;
+        writeln!(writer, "Gene Sequence (Command Strings):")?;
+        for g in &gene {
+            write!(writer, "{} ", g)?;
+        }
+        writeln!(writer, "\n")?;
+        
+        writeln!(writer, "Graph Structure")?;
+        writeln!(writer, "Edge Count: {}", edges.len())?;
+        writeln!(writer, "Edge List (u, v):")?;
+        for (u, v) in edges {
+            writeln!(writer, "{} {}", u, v)?;
+        }
+        
+        Ok(())
     }
 }
