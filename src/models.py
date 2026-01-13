@@ -138,6 +138,11 @@ class Generator(nn.Module):
         node_stats, edge_stats = dataset_stats
 
         all_x, all_edges, all_batch = [], [], []
+
+        # Store raw probabilities and pair indices for refinement loss
+        # These are lists of tensors, one per graph in the batch
+        batch_probs = [] 
+        batch_pair_indices = []
         node_offset = 0
 
         for i in range(num_graphs):
@@ -151,6 +156,9 @@ class Generator(nn.Module):
             edge_probs, pair_idx = self.edge_predictor(x, temperature)
             m_pairs = pair_idx.size(1) if pair_idx.numel() > 0 else 0
 
+            # Store for loss computation
+            batch_probs.append(edge_probs)
+            batch_pair_indices.append(pair_idx)
 
             # Calculate expected density from dataset statistics
             density = 0.05
@@ -180,7 +188,12 @@ class Generator(nn.Module):
         edge_index = torch.cat(all_edges, dim=1) if all_edges else torch.empty((2, 0), dtype=torch.long, device=device)
         batch = torch.cat(all_batch, dim=0) if all_batch else torch.empty((0,), dtype=torch.long, device=device)
         y = class_labels.clone().to(device)
-        return Data(x=x, edge_index=edge_index, batch=batch, y=y)
+
+        # Return Data object with attached probability info for refinement
+        data = Data(x=x, edge_index=edge_index, batch=batch, y=y)
+        data.edge_probs_list = batch_probs
+        data.pair_indices_list = batch_pair_indices
+        return data
 
 
 # --------------------------
