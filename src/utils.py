@@ -10,15 +10,11 @@ import numpy as np
 
 
 from collections import defaultdict
-from typing import Tuple, Dict, List, Iterable
+from typing import Tuple, Dict, List, Iterable, Any
 
 
 from torch_geometric.data import Data
 from torch_geometric.utils import degree
-
-
-from typing import Tuple, Dict, List, Iterable
-
 
 import matplotlib.pyplot as plt
 
@@ -202,6 +198,42 @@ def compute_graph_statistics(graphs: List[Data], num_bins: int = 10):
         'spectral': spectral
     }
     return stats
+
+def get_target_distribution_stats(graphs: List[Data], num_bins: int = 10) -> Dict[str, Tuple[List[List[float]], List[float], List[float]]]:
+    """
+    Computes detailed statistics (distributions, mean, std) for a set of graphs 
+    to be used as targets for the Rust Refiner.
+    
+    Returns:
+        Dict with keys 'degree', 'clustering', 'spectral'.
+        Values are tuples: (matrix_of_samples, mean_vector, std_vector)
+    """
+    stats = compute_graph_statistics(graphs, num_bins)
+    
+    if not stats:
+        # Fallback for empty graph lists
+        zeros = [0.0] * num_bins
+        return {
+            'degree': ([[0.0]*num_bins], zeros, [1.0]*num_bins),
+            'clustering': ([[0.0]*num_bins], zeros, [1.0]*num_bins),
+            'spectral': ([[0.0]*num_bins], zeros, [1.0]*num_bins),
+        }
+
+    def process_stat(stat_matrix):
+        # stat_matrix shape: [num_graphs, num_bins]
+        # Calculate mean and std across the population of graphs
+        mean = np.mean(stat_matrix, axis=0)
+        std = np.std(stat_matrix, axis=0) + 1e-6 # Avoid div/0
+        
+        # Convert to pure Python lists for Rust compatibility
+        return stat_matrix.tolist(), mean.tolist(), std.tolist()
+
+    return {
+        'degree': process_stat(stats['degrees']),
+        'clustering': process_stat(stats['clustering']),
+        'spectral': process_stat(stats['spectral'])
+    }
+
 
 
 # --------------------------
