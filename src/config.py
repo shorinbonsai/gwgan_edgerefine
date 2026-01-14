@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List, Dict
 
 # --------------------------
 # Configuration
@@ -33,9 +34,31 @@ class Config:
     num_bins: int = 10
     vis_num_samples: int = 6
 
-    gammas = {'degree': 1.0, 'clustering': 1.0, 'spectral': 0.1}
+    # --------------------------
+    # Refinement (GA) Settings
+    # --------------------------
+    use_refinement: bool = True  # Toggle GA on/off
+    
+    # How often to save GA logs (0 = never, 1 = every epoch, 10 = every 10 epochs)
+    # Logs are only saved for the first graph of the first batch to save space.
+    refinement_log_interval: int = 1  
+    
+    # GA Parameters
+    refiner_pop_size: int = 50
+    refiner_gene_len: int = 20
+    refiner_gens: int = 25
+    lambda_refine: float = 1.0  # Weight for the refinement loss
 
-    weights = {'degree': 0.3, 'clustering': 0.4, 'spectral': 0.3}
+    # Weights for the 9 graph operations:
+    # [Toggle, LocalToggle, Hop, Add, Delete, Swap, LocalAdd, LocalDelete, Null]
+    refinement_op_weights: List[float] = field(default_factory=lambda: [
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.1
+    ])
+
+    gammas: Dict[str, float] = field(default_factory=lambda: {'degree': 1.0, 'clustering': 1.0, 'spectral': 0.1})
+
+    weights: Dict[str, float] = field(default_factory=lambda: {'degree': 0.3, 'clustering': 0.4, 'spectral': 0.3})
+
 
     save_dir: str = './saved_models/'
     results_dir: str = './results/'

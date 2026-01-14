@@ -66,6 +66,13 @@ def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoad
     # Temperature annealing: start random, become more deterministic (the smaller, the more deterministic)
     temperature = max(config.end_temperature, config.start_temperature - (epoch * 0.03))  # 2.0 -> 0.5 over ~50 epochs
 
+    # Initialize Refiner (Lightweight wrapper)
+    # We only initialize it if refinement is enabled to save memory/time
+    refiner = None
+    if config.use_refinement:
+        refiner = graph_refiner.GraphRefiner(config.refiner_pop_size, config.refiner_gene_len)
+        refiner.set_operation_weights(config.refinement_op_weights)
+
     # Initialize Refiner (Lightweight for inner loop)
     refiner_pop_size = 50
     refiner_gene_len = 20
@@ -84,7 +91,12 @@ def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoad
     w_tup = (config.weights['degree'], config.weights['clustering'], config.weights['spectral'])
     g_tup = (config.gammas['degree'], config.gammas['clustering'], config.gammas['spectral'])
 
-    for batch in loader:
+    # Logging directory setup
+    log_dir = os.path.join(config.results_dir, "refiner_logs")
+    if config.use_refinement and config.refinement_log_interval > 0:
+        os.makedirs(log_dir, exist_ok=True)
+
+    for batch_idx, batch in enumerate(loader):
         batch = batch.to(device)
         batch_size = batch.y.size(0) if hasattr(batch, 'y') else 0
 
@@ -120,84 +132,108 @@ def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoad
         # B. Refinement Loss (Multi-Objective Feedback)
         refinement_loss = torch.tensor(0.0, device=device)
 
-        # We need to compute refinement for EACH graph in the batch individually
-        for i in range(batch_size):
-            label = int(real_labels[i].item())
-            
-            # --- Extract Single Graph Structure for Rust ---
-            # 1. Identify nodes for graph 'i'
-            mask = (fake_data.batch == i)
-            num_nodes_i = mask.sum().item()
-            
-            if num_nodes_i < 3: continue # Skip trivial graphs
+        if config.use_refinement:
+            # We need to compute refinement for EACH graph in the batch individually
+            for i in range(batch_size):
+                label = int(real_labels[i].item())
+                
+                # --- Extract Single Graph Structure for Rust ---
+                # 1. Identify nodes for graph 'i'
+                mask = (fake_data.batch == i)
+                num_nodes_i = mask.sum().item()
+                
+                if num_nodes_i < 3: continue # Skip trivial graphs
 
-            # 2. Map global batch indices to local indices (0..N-1)
-            global_node_indices = mask.nonzero().flatten()
-            node_idx_map = {old.item(): new for new, old in enumerate(global_node_indices)}
-            
-            # 3. Extract discrete edges for initialization
-            batch_edge_mask = (mask[fake_data.edge_index[0]] & mask[fake_data.edge_index[1]])
-            graph_edges = fake_data.edge_index[:, batch_edge_mask]
-            
-            edges_list = []
-            for e_i in range(graph_edges.size(1)):
-                u, v = graph_edges[0, e_i].item(), graph_edges[1, e_i].item()
-                edges_list.append((node_idx_map[u], node_idx_map[v]))
-            
-            # --- Run Rust Refiner ---
-            stats = target_distributions[label] 
-            
-            # Setup targets for this class
-            refiner.set_target_statistics(
-                stats['degree'][0], stats['degree'][1], stats['degree'][2],
-                stats['clustering'][0], stats['clustering'][1], stats['clustering'][2],
-                stats['spectral'][0], stats['spectral'][1], stats['spectral'][2],
-                w_tup, g_tup
-            )
+                # 2. Map global batch indices to local indices (0..N-1)
+                global_node_indices = mask.nonzero().flatten()
+                node_idx_map = {old.item(): new for new, old in enumerate(global_node_indices)}
+                
+                # 3. Extract discrete edges for initialization
+                batch_edge_mask = (mask[fake_data.edge_index[0]] & mask[fake_data.edge_index[1]])
+                graph_edges = fake_data.edge_index[:, batch_edge_mask]
+                
+                edges_list = []
+                for e_i in range(graph_edges.size(1)):
+                    u, v = graph_edges[0, e_i].item(), graph_edges[1, e_i].item()
+                    edges_list.append((node_idx_map[u], node_idx_map[v]))
+                
+                # --- Run Rust Refiner ---
+                
+                # 1. LOAD THE GRAPH (Fix: This was missing previously)
+                refiner.load_initial_graph(num_nodes_i, edges_list, config.seed + epoch + i)
 
-            # Evolve (The Teacher Step)
-            refiner.evolve(refiner_gens, 42 + i + epoch)
-            
-            # Get Ground Truth Edges
-            best_edges = refiner.get_best_graph()
-            best_edges_set = set()
-            for u, v in best_edges:
-                if u > v: u, v = v, u
-                best_edges_set.add((u, v))
-            
-            # --- Calculate Feedback Loss ---
-            # Compare Generator's Soft Probabilities vs Refiner's Hard Edges
-            probs = fake_data.edge_probs_list[i].view(-1)
-            pairs = fake_data.pair_indices_list[i]
-            
-            if probs.numel() > 0:
-                target_vec = []
-                for p_idx in range(pairs.size(1)):
-                    # These pairs are already local 0..N indices from the EdgePredictor
-                    u, v = int(pairs[0, p_idx]), int(pairs[1, p_idx])
+                # 2. Set Targets
+                stats = target_distributions[label] 
+                refiner.set_target_statistics(
+                    stats['degree'][0], stats['degree'][1], stats['degree'][2],
+                    stats['clustering'][0], stats['clustering'][1], stats['clustering'][2],
+                    stats['spectral'][0], stats['spectral'][1], stats['spectral'][2],
+                    w_tup, g_tup
+                )
+
+                # 3. Evolve (The Teacher Step)
+                refiner.evolve(config.refiner_gens, 42 + i + epoch)
+                
+                # 4. Logging (Conditional)
+                # Save logs only for the first graph of the first batch at specific intervals
+                should_log = (
+                    config.refinement_log_interval > 0 and 
+                    batch_idx == 0 and 
+                    i == 0 and 
+                    epoch % config.refinement_log_interval == 0
+                )
+                
+                if should_log:
+                    log_file_base = os.path.join(log_dir, f"epoch_{epoch}_batch_{batch_idx}_graph_{i}")
+                    try:
+                        refiner.save_logs(f"{log_file_base}_history.csv")
+                        refiner.save_results(f"{log_file_base}_best.txt")
+                    except Exception as e:
+                        print(f"Failed to save refiner logs: {e}")
+
+                # 5. Get Ground Truth Edges
+                best_edges = refiner.get_best_graph()
+                best_edges_set = set()
+                for u, v in best_edges:
                     if u > v: u, v = v, u
+                    best_edges_set.add((u, v))
+                
+                # --- Calculate Feedback Loss ---
+                # Compare Generator's Soft Probabilities vs Refiner's Hard Edges
+                probs = fake_data.edge_probs_list[i].view(-1)
+                pairs = fake_data.pair_indices_list[i]
+                
+                if probs.numel() > 0:
+                    target_vec = []
+                    for p_idx in range(pairs.size(1)):
+                        # These pairs are already local 0..N indices from the EdgePredictor
+                        u, v = int(pairs[0, p_idx]), int(pairs[1, p_idx])
+                        if u > v: u, v = v, u
+                        
+                        # If this edge exists in the refined graph -> Target = 1.0
+                        val = 1.0 if (u, v) in best_edges_set else 0.0
+                        target_vec.append(val)
                     
-                    # If this edge exists in the refined graph -> Target = 1.0
-                    val = 1.0 if (u, v) in best_edges_set else 0.0
-                    target_vec.append(val)
-                
-                target_tensor = torch.tensor(target_vec, device=device)
-                
-                # BCE Loss: Generator should have predicted what Refiner found
-                refinement_loss += F.binary_cross_entropy(probs, target_tensor)
+                    target_tensor = torch.tensor(target_vec, device=device)
+                    
+                    # BCE Loss: Generator should have predicted what Refiner found
+                    refinement_loss += F.binary_cross_entropy(probs, target_tensor)
 
-        # Average over batch
-        if batch_size > 0:
-            refinement_loss = refinement_loss / batch_size
+            # Average over batch
+            if batch_size > 0:
+                refinement_loss = refinement_loss / batch_size
+
+        
 
         # C. Combine Losses
-        total_g_loss = g_loss_adv + (lambda_refine * refinement_loss)
+        total_g_loss = g_loss_adv + (config.lambda_refine * refinement_loss)
         
         total_g_loss.backward()
         opt_g.step()
         
         g_losses.append(total_g_loss.item())
-        r_losses.append(refinement_loss.item())
+        if config.use_refinement:
+            r_losses.append(refinement_loss.item())
 
     # Return metrics
     mean_d = float(np.mean(d_losses)) if d_losses else 0.0
@@ -206,7 +242,6 @@ def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoad
     
     return mean_d, mean_g, mean_r
 
-
 def train(generator: nn.Module, discriminator: nn.Module, train_loader: DataLoader, val_loader: DataLoader, opt_g, opt_d, config, labels, dataset_stats: Tuple[Dict, Dict], target_distributions: Dict, device: torch.device, logger: logging.Logger, epoch: int = 1):
     # Training loop
     best_val_score = float('inf')
@@ -214,6 +249,12 @@ def train(generator: nn.Module, discriminator: nn.Module, train_loader: DataLoad
     patience = config.patience
 
     logger.info("Starting training...")
+    if config.use_refinement:
+        logger.info(f"Refinement ENABLED. Operation weights: {config.refinement_op_weights}")
+        logger.info(f"Logging refinement data every {config.refinement_log_interval} epochs.")
+    else:
+        logger.info("Refinement DISABLED. Running pure WGAN.")
+
     logger.info("Monitoring: MMD (weighted)")
 
     for epoch in range(1, config.epochs + 1):
@@ -222,7 +263,10 @@ def train(generator: nn.Module, discriminator: nn.Module, train_loader: DataLoad
 
         val_score = evaluate(generator, discriminator, labels, val_loader, train_loader, dataset_stats, config, device, logger)
 
-        logger.info(f"Epoch {epoch:02d} | D_loss: {d_loss:.6f} | G_loss: {g_loss:.6f} | Val: {val_score:.6f}")
+        log_msg = f"Epoch {epoch:02d} | D_loss: {d_loss:.6f} | G_loss: {g_loss:.6f} | Val: {val_score:.6f}"
+        if config.use_refinement:
+            log_msg += f" | Refine_loss: {r_loss:.6f}"
+        logger.info(log_msg)
 
         # Early stopping + save
         if val_score < best_val_score:
@@ -240,7 +284,6 @@ def train(generator: nn.Module, discriminator: nn.Module, train_loader: DataLoad
             if patience_counter >= patience:
                 logger.info(f"Early stopping at epoch {epoch}")
                 break
-
 
 
 # --------------------------
