@@ -11,7 +11,7 @@ from torch_geometric.loader import DataLoader
 from config import Config
 from models import Generator, Discriminator
 from train import train, evaluate
-from utils import visualize_graphs, analyze_dataset_statistics
+from utils import visualize_graphs, analyze_dataset_statistics, get_target_distribution_stats
 
 # --------------------------
 # Logging
@@ -67,8 +67,29 @@ def main():
     dataset_stats = dataset_stats_result[:2]
     logger.info(f"Node Summary: {dataset_stats[0]}")
     logger.info(f"Edge Summary: {dataset_stats[1]}")
-    # global_max_degree = dataset_stats_result[2] 
+    global_max_degree = dataset_stats_result[2] 
     logger.info(f"Global Max Degree: {global_max_degree}")
+
+    # --- PRE-COMPUTE TARGET STATISTICS FOR RUST REFINER ---
+    logger.info("Computing target statistics for Graph Refiner...")
+    target_distributions = {}
+
+    # Group training graphs by class
+    train_graphs_by_class = {c: [] for c in labels}
+    for data in train_dataset:
+        train_graphs_by_class[int(data.y.item())].append(data)
+        
+    for c in labels:
+        graphs = train_graphs_by_class[c]
+        if len(graphs) > 0:
+            # Compute histograms/stats for this class
+            target_distributions[c] = get_target_distribution_stats(graphs, num_bins=config.num_bins)
+        else:
+            # Fallback for empty classes (shouldn't happen with standard datasets)
+            logger.warning(f"Class {c} has no training samples! Using class 0 stats as fallback.")
+            target_distributions[c] = get_target_distribution_stats(train_graphs_by_class[0], num_bins=config.num_bins)
+    
+    logger.info("Target statistics computed.")
 
     # Initialize models
     generator = Generator(config, dataset.num_classes, dataset.num_node_features).to(device)
@@ -78,7 +99,7 @@ def main():
     opt_g = torch.optim.Adam(generator.parameters(), lr=config.lr_gen, betas=config.betas_gen)
     opt_d = torch.optim.Adam(discriminator.parameters(), lr=config.lr_dis, betas=config.betas_dis)
 
-    train(generator, discriminator, train_loader, val_loader, opt_g, opt_d, config, labels, dataset_stats, device, logger, config.epochs)
+    train(generator, discriminator, train_loader, val_loader, opt_g, opt_d, config, labels, dataset_stats, target_distributions, device, logger, config.epochs)
 
 
     # Load best model if exists

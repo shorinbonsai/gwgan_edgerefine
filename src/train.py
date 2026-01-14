@@ -11,8 +11,9 @@ import torch.nn as nn
 from torch_geometric.loader import DataLoader
 from torch_geometric.data import Data
 
-
 from utils import extract_individual_graphs, wl_graph_hash, compute_graph_statistics, compute_mmd
+
+import graph_refiner
 # --------------------------
 # Gradient Penalty
 # --------------------------
@@ -56,7 +57,7 @@ def compute_gradient_penalty(discriminator: nn.Module, real_data: Data, fake_dat
 # --------------------------
 #  Training Functions
 # --------------------------
-def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoader, opt_g, opt_d, config, dataset_stats: Tuple[Dict, Dict], device: torch.device, epoch: int = 1):
+def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoader, opt_g, opt_d, config, dataset_stats: Tuple[Dict, Dict], target_distributions: Dict, device: torch.device, epoch: int = 1):
     """Train for one epoch with temperature annealing (generator & discriminator)."""
     generator.train()
     discriminator.train()
@@ -64,8 +65,23 @@ def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoad
     # Temperature annealing: start random, become more deterministic (the smaller, the more deterministic)
     temperature = max(config.end_temperature, config.start_temperature - (epoch * 0.03))  # 2.0 -> 0.5 over ~50 epochs
 
+    # Initialize Refiner (Lightweight for inner loop)
+    refiner_pop_size = 50
+    refiner_gene_len = 20
+    refiner_gens = 25
+    refiner = graph_refiner.GraphRefiner(refiner_pop_size, refiner_gene_len)
+
+    # Weight for the refinement loss component
+    lambda_refine = 1.0 
+
+
     d_losses = []
     g_losses = []
+    r_losses = []
+
+    # Unpack weights/gammas for Rust ONCE per epoch to save time
+    w_tup = (config.weights['degree'], config.weights['clustering'], config.weights['spectral'])
+    g_tup = (config.gammas['degree'], config.gammas['clustering'], config.gammas['spectral'])
 
     for batch in loader:
         batch = batch.to(device)
@@ -94,17 +110,103 @@ def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoad
 
         # Train Generator
         opt_g.zero_grad()
+
+        # A. WGAN Adversarial Loss
         fake_data = generator(batch_size, dataset_stats, real_labels, temperature=temperature)
         d_fake = discriminator(fake_data, real_labels)
-        g_loss = -torch.mean(d_fake)
-        g_loss.backward()
+        g_loss_adv = -torch.mean(d_fake)
+
+        # B. Refinement Loss (Multi-Objective Feedback)
+        refinement_loss = torch.tensor(0.0, device=device)
+
+        # We need to compute refinement for EACH graph in the batch individually
+        for i in range(batch_size):
+            label = int(real_labels[i].item())
+            
+            # --- Extract Single Graph Structure for Rust ---
+            # 1. Identify nodes for graph 'i'
+            mask = (fake_data.batch == i)
+            num_nodes_i = mask.sum().item()
+            
+            if num_nodes_i < 3: continue # Skip trivial graphs
+
+            # 2. Map global batch indices to local indices (0..N-1)
+            global_node_indices = mask.nonzero().flatten()
+            node_idx_map = {old.item(): new for new, old in enumerate(global_node_indices)}
+            
+            # 3. Extract discrete edges for initialization
+            batch_edge_mask = (mask[fake_data.edge_index[0]] & mask[fake_data.edge_index[1]])
+            graph_edges = fake_data.edge_index[:, batch_edge_mask]
+            
+            edges_list = []
+            for e_i in range(graph_edges.size(1)):
+                u, v = graph_edges[0, e_i].item(), graph_edges[1, e_i].item()
+                edges_list.append((node_idx_map[u], node_idx_map[v]))
+            
+            # --- Run Rust Refiner ---
+            stats = target_distributions[label] 
+            
+            # Setup targets for this class
+            refiner.set_target_statistics(
+                stats['degree'][0], stats['degree'][1], stats['degree'][2],
+                stats['clustering'][0], stats['clustering'][1], stats['clustering'][2],
+                stats['spectral'][0], stats['spectral'][1], stats['spectral'][2],
+                w_tup, g_tup
+            )
+
+            # Evolve (The Teacher Step)
+            refiner.evolve(refiner_gens, 42 + i + epoch)
+            
+            # Get Ground Truth Edges
+            best_edges = refiner.get_best_graph()
+            best_edges_set = set()
+            for u, v in best_edges:
+                if u > v: u, v = v, u
+                best_edges_set.add((u, v))
+            
+            # --- Calculate Feedback Loss ---
+            # Compare Generator's Soft Probabilities vs Refiner's Hard Edges
+            probs = fake_data.edge_probs_list[i].view(-1)
+            pairs = fake_data.pair_indices_list[i]
+            
+            if probs.numel() > 0:
+                target_vec = []
+                for p_idx in range(pairs.size(1)):
+                    # These pairs are already local 0..N indices from the EdgePredictor
+                    u, v = int(pairs[0, p_idx]), int(pairs[1, p_idx])
+                    if u > v: u, v = v, u
+                    
+                    # If this edge exists in the refined graph -> Target = 1.0
+                    val = 1.0 if (u, v) in best_edges_set else 0.0
+                    target_vec.append(val)
+                
+                target_tensor = torch.tensor(target_vec, device=device)
+                
+                # BCE Loss: Generator should have predicted what Refiner found
+                refinement_loss += F.binary_cross_entropy(probs, target_tensor)
+
+        # Average over batch
+        if batch_size > 0:
+            refinement_loss = refinement_loss / batch_size
+
+        # C. Combine Losses
+        total_g_loss = g_loss_adv + (lambda_refine * refinement_loss)
+        
+        total_g_loss.backward()
         opt_g.step()
-        g_losses.append(g_loss.item())
+        
+        g_losses.append(total_g_loss.item())
+        r_losses.append(refinement_loss.item())
 
-    return float(np.mean(d_losses)) if len(d_losses) > 0 else 0.0, float(np.mean(g_losses)) if len(g_losses) > 0 else 0.0
+    # Return metrics
+    mean_d = float(np.mean(d_losses)) if d_losses else 0.0
+    mean_g = float(np.mean(g_losses)) if g_losses else 0.0
+    mean_r = float(np.mean(r_losses)) if r_losses else 0.0
+    
+    return mean_d, mean_g, mean_r
 
 
-def train(generator: nn.Module, discriminator: nn.Module, train_loader: DataLoader, val_loader: DataLoader, opt_g, opt_d, config, labels, dataset_stats: Tuple[Dict, Dict], device: torch.device, logger: logging.Logger, epoch: int = 1):
+def train(generator: nn.Module, discriminator: nn.Module, train_loader: DataLoader, val_loader: DataLoader, opt_g, opt_d, config, labels, dataset_stats: Tuple[Dict, Dict], target_distributions: Dict, device: torch.device, logger: logging.Logger, epoch: int = 1):
     # Training loop
     best_val_score = float('inf')
     patience_counter = 0
@@ -114,8 +216,8 @@ def train(generator: nn.Module, discriminator: nn.Module, train_loader: DataLoad
     logger.info("Monitoring: MMD (weighted)")
 
     for epoch in range(1, config.epochs + 1):
-        d_loss, g_loss = train_epoch(generator, discriminator, train_loader,
-                                     opt_g, opt_d, config, dataset_stats, device, epoch)
+        d_loss, g_loss, r_loss = train_epoch(generator, discriminator, train_loader,
+                                     opt_g, opt_d, config, dataset_stats,target_distributions, device, epoch)
 
         val_score = evaluate(generator, discriminator, labels, val_loader, train_loader, dataset_stats, config, device, logger)
 
