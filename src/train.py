@@ -73,12 +73,6 @@ def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoad
         refiner = graph_refiner.GraphRefiner(config.refiner_pop_size, config.refiner_gene_len)
         refiner.set_operation_weights(config.refinement_op_weights)
 
-    # Initialize Refiner (Lightweight for inner loop)
-    refiner_pop_size = 50
-    refiner_gene_len = 20
-    refiner_gens = 25
-    refiner = graph_refiner.GraphRefiner(refiner_pop_size, refiner_gene_len)
-
     # Weight for the refinement loss component
     lambda_refine = 1.0 
 
