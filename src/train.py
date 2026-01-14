@@ -14,6 +14,7 @@ from torch_geometric.data import Data
 from utils import extract_individual_graphs, wl_graph_hash, compute_graph_statistics, compute_mmd
 
 import graph_refiner
+import torch.nn.functional as F
 # --------------------------
 # Gradient Penalty
 # --------------------------
@@ -299,7 +300,7 @@ def evaluate(generator: nn.Module, discriminator: nn.Module, labels: Iterable[in
 
     total_combined = (config.weights['degree'] * mmd_overall_degree +
                                      config.weights['clustering'] * mmd_overall_clustering +
-                                     config.weights['spectral'] * mmd_overall_spectral[class_label])
+                                     config.weights['spectral'] * mmd_overall_spectral)
 
     # ------------------------------
     # Compute MMD for each graph statistic
