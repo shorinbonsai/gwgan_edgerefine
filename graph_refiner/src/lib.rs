@@ -49,13 +49,18 @@ impl GraphRefiner {
         self.optimizer.set_op_weights(weights);
     }
 
+    /// Sets the crossover and mutation probabilities
+    pub fn set_probabilities(&mut self, crossover: f64, mutation: f64) {
+        self.optimizer.set_probabilities(crossover, mutation);
+    }
+
     pub fn set_target_statistics(
         &mut self,
         target_degrees: Vec<Vec<f64>>, degree_mean: Vec<f64>, degree_std: Vec<f64>,
         target_clustering: Vec<Vec<f64>>, clust_mean: Vec<f64>, clust_std: Vec<f64>,
         target_spectral: Vec<Vec<f64>>, spec_mean: Vec<f64>, spec_std: Vec<f64>,
         weights: (f64, f64, f64),
-        gammas: (f64, f64, f64) // Added gammas argument
+        gammas: (f64, f64, f64) 
     ) {
         self.optimizer.set_targets(
             target_degrees, degree_mean, degree_std,
@@ -66,9 +71,7 @@ impl GraphRefiner {
     }
 
     /// Run the genetic algorithm for a set number of generations.  Returns
-    /// the best fitness score achieved in this run.  The current
-    /// implementation does not compute a real fitness and always returns
-    /// `0.0` as a placeholder.
+    /// the best fitness score achieved in this run.  
     pub fn evolve(&mut self, generations: usize, seed: u64) -> f64 {
         self.optimizer.evolve(generations, seed)
     }

@@ -62,6 +62,8 @@ pub struct GeneticOptimizer {
     gamma_spectral: f64,
     weights: (f64, f64, f64), // (degree, clustering, spectral)
     op_weights: Vec<f64>,
+    crossover_prob: f64,
+    mutation_prob: f64,
     pub history: Vec<GenerationStats>,
 }
 
@@ -94,6 +96,9 @@ impl GeneticOptimizer {
 
             weights: (0.0, 0.0, 0.0),
             op_weights: vec![1.0; 9], // Equal weights for 9 operations
+
+            crossover_prob: 1.0,
+            mutation_prob: 1.0,
             history: Vec::new(),
         }
     }
@@ -105,6 +110,11 @@ impl GeneticOptimizer {
              panic!("Must provide exactly 9 weights (0-7 Ops + 8 Null)");
         }
         self.op_weights = weights;
+    }
+
+    pub fn set_probabilities(&mut self, crossover: f64, mutation: f64) {
+        self.crossover_prob = crossover.clamp(0.0, 1.0);
+        self.mutation_prob = mutation.clamp(0.0, 1.0);
     }
 
     fn generate_gene<R: Rng>(rng: &mut R, dist: &WeightedIndex<f64>) -> u64 {
@@ -298,6 +308,8 @@ impl GeneticOptimizer {
         let tournament_size = 5; 
         let mut best_overall_error = f64::INFINITY; 
         let op_weights = self.op_weights.clone();
+        let crossover_prob = self.crossover_prob;
+        let mutation_prob = self.mutation_prob;
 
         for g in 0..generations {
             // 1. Evaluate Fitness (Parallel)
@@ -380,10 +392,20 @@ impl GeneticOptimizer {
                     let p1 = Self::tournament_select(old_pop, &fitnesses, tournament_size, &mut rng);
                     let p2 = Self::tournament_select(old_pop, &fitnesses, tournament_size, &mut rng);
 
-                    // Cross & Mutate
-                    let (mut c1, mut c2) = Self::crossover(&p1, &p2, &mut rng);
-                    Self::mutate(&mut c1, &mut rng, &dist);
-                    Self::mutate(&mut c2, &mut rng, &dist);
+                    // Crossover with probability check
+                    let (mut c1, mut c2) = if rng.random_bool(crossover_prob) {
+                         Self::crossover(&p1, &p2, &mut rng)
+                    } else {
+                         (p1.clone(), p2.clone())
+                    };
+
+                    // Mutation with probability check
+                    if rng.random_bool(mutation_prob) {
+                        Self::mutate(&mut c1, &mut rng, &dist);
+                    }
+                    if rng.random_bool(mutation_prob) {
+                        Self::mutate(&mut c2, &mut rng, &dist);
+                    }
 
                     vec![c1, c2]
                 })

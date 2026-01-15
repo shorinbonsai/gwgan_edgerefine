@@ -49,6 +49,9 @@ class Config:
     refiner_gens: int = 25
     lambda_refine: float = 1.0  # Weight for the refinement loss
 
+    crossover_probability: float = 0.5
+    mutation_probability: float = 0.8
+
     # Weights for the 9 graph operations:
     # [Toggle, LocalToggle, Hop, Add, Delete, Swap, LocalAdd, LocalDelete, Null]
     refinement_op_weights: List[float] = field(default_factory=lambda: [

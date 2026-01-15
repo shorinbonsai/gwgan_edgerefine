@@ -72,9 +72,7 @@ def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoad
     if config.use_refinement:
         refiner = graph_refiner.GraphRefiner(config.refiner_pop_size, config.refiner_gene_len)
         refiner.set_operation_weights(config.refinement_op_weights)
-
-    # Weight for the refinement loss component
-    lambda_refine = 1.0 
+        refiner.set_probabilities(config.crossover_probability, config.mutation_probability)
 
 
     d_losses = []
@@ -382,9 +380,6 @@ def evaluate(generator: nn.Module, discriminator: nn.Module, labels: Iterable[in
             kernel='rbf', 
             gamma=config.gammas['spectral']
         )
-        # mmd_degree[class_label] = compute_mmd(real_stats['degrees'], fake_stats['degrees'], kernel='rbf', gamma=1.0)
-        # mmd_clustering[class_label] = compute_mmd(real_stats['clustering'], fake_stats['clustering'], kernel='rbf', gamma=1.0)
-        # mmd_spectral[class_label] = compute_mmd(real_stats['spectral'], fake_stats['spectral'], kernel='rbf', gamma=0.1)
 
         logger.info(f"MMD Degree {class_label}: {mmd_degree[class_label]:.6f}")
         logger.info(f"MMD Clustering {class_label}: {mmd_clustering[class_label]:.6f}")
