@@ -212,11 +212,11 @@ impl GeneticOptimizer {
             // range we skip the command.
             let operation = match op_code {
                 0 => Some(GraphOperation::Toggle),
-                1 => Some(GraphOperation::LocalToggle),
-                2 => Some(GraphOperation::Hop),
-                3 => Some(GraphOperation::Add),
-                4 => Some(GraphOperation::Delete),
-                5 => Some(GraphOperation::Swap),
+                1 => Some(GraphOperation::Hop),
+                2 => Some(GraphOperation::Add),
+                3 => Some(GraphOperation::Delete),
+                4 => Some(GraphOperation::Swap),
+                5 => Some(GraphOperation::LocalToggle),
                 6 => Some(GraphOperation::LocalAdd),
                 7 => Some(GraphOperation::LocalDelete),
                 8 => Some(GraphOperation::Null),

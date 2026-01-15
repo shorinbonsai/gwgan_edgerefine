@@ -55,7 +55,7 @@ class Config:
     # Weights for the 9 graph operations:
     # [Toggle, LocalToggle, Hop, Add, Delete, Swap, LocalAdd, LocalDelete, Null]
     refinement_op_weights: List[float] = field(default_factory=lambda: [
-        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.1
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
     ])
 
     gammas: Dict[str, float] = field(default_factory=lambda: {'degree': 1.0, 'clustering': 1.0, 'spectral': 0.1})

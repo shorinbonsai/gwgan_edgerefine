@@ -2,11 +2,11 @@ use crate::graph::GraphState;
 
 pub enum GraphOperation {
     Toggle,
-    LocalToggle,
     Hop,
     Add,
     Delete,
     Swap,
+    LocalToggle,
     LocalAdd,
     LocalDelete,
     Null,
@@ -17,11 +17,11 @@ impl GraphOperation {
     pub fn apply(&self, graph: &mut GraphState, v1: usize, v2: usize, v3: usize, v4: usize) {
         match self {
             GraphOperation::Toggle => self.apply_toggle(graph, v1, v2),
-            GraphOperation::LocalToggle => self.apply_local_toggle(graph, v1, v2, v3),
             GraphOperation::Hop => self.apply_hop(graph, v1, v2, v3),
             GraphOperation::Add => self.apply_add(graph, v1, v2),
             GraphOperation::Delete => self.apply_delete(graph, v1, v2),
             GraphOperation::Swap => self.apply_swap(graph, v1, v2, v3, v4),
+            GraphOperation::LocalToggle => self.apply_local_toggle(graph, v1, v2, v3),
             GraphOperation::LocalAdd => self.apply_local_add(graph, v1, v2, v3),
             GraphOperation::LocalDelete => self.apply_local_delete(graph, v1, v2, v3),
             GraphOperation::Null => {},
