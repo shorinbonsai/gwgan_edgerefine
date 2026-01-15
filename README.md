@@ -17,6 +17,8 @@ This library is designed to be called directly from Python but executes its evol
 
 ## **Installation**
 
+pip install torch torch-geometric numpy networkx matplotlib scipy
+
 ### **(Using Pre-built Wheels)**
 
 If you have been provided a .whl file, you do **not** need Rust installed. Simply run:
