@@ -37,15 +37,15 @@ class Config:
     # --------------------------
     # Refinement (GA) Settings
     # --------------------------
-    use_refinement: bool = False  # Toggle GA on/off
+    use_refinement: bool = True  # Toggle GA on/off
     
     # How often to save GA logs (0 = never, 1 = every epoch, 10 = every 10 epochs)
     # Logs are only saved for the first graph of the first batch to save space.
     refinement_log_interval: int = 1  
     
     # GA Parameters
-    refiner_pop_size: int = 100
-    refiner_gene_len: int = 60
+    refiner_pop_size: int = 50
+    # refiner_gene_len: int = 60
     refiner_gens: int = 50
     lambda_refine: float = 1.0  # Weight for the refinement loss
 

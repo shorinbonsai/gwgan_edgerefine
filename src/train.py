@@ -70,7 +70,7 @@ def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoad
     # We only initialize it if refinement is enabled to save memory/time
     refiner = None
     if config.use_refinement:
-        refiner = graph_refiner.GraphRefiner(config.refiner_pop_size, config.refiner_gene_len)
+        refiner = graph_refiner.GraphRefiner(config.refiner_pop_size)
         refiner.set_operation_weights(config.refinement_op_weights)
         refiner.set_probabilities(config.crossover_probability, config.mutation_probability)
 
@@ -151,8 +151,9 @@ def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoad
                 
                 # --- Run Rust Refiner ---
                 
-                # 1. LOAD THE GRAPH (Fix: This was missing previously)
-                refiner.load_initial_graph(num_nodes_i, edges_list, config.seed + epoch + i)
+                # 1. LOAD THE GRAPH
+                dynamic_gene_len = num_nodes_i * 2
+                refiner.load_initial_graph(num_nodes_i, edges_list, config.seed + epoch + i, dynamic_gene_len)
 
                 # 2. Set Targets
                 stats = target_distributions[label] 

@@ -6,11 +6,11 @@ fn setup_optimizer() -> GeneticOptimizer {
     let pop_size = 20;
     let gene_len = 10;
     // [CHANGE] Use GeneticOptimizer::new instead of GraphRefiner
-    let mut optimizer = GeneticOptimizer::new(pop_size, gene_len);
+    let mut optimizer = GeneticOptimizer::new(pop_size);
     
     // Setup a simple ring graph: 0-1-2-3-0
     let edges = vec![(0,1), (1,2), (2,3), (3,0)];
-    optimizer.initialize_population(4, edges, 42);
+    optimizer.initialize_population(4, edges, 42, gene_len);
     
     optimizer.set_op_weights(vec![1.0; 9]);
     

@@ -72,11 +72,11 @@ impl GeneticOptimizer {
     /// genomes maintained and `gene_length` sets the number of commands in
     /// each genome.  The base graph is initialized when
     /// `initialize_population` is called.
-    pub fn new(population_size: usize, gene_length: usize) -> Self {
+    pub fn new(population_size: usize) -> Self {
         GeneticOptimizer {
             population: Vec::new(),
             population_size,
-            gene_length,
+            gene_length: 0,
             base_graph: None,
             best_genome: None,
             target_degrees: Vec::new(),
@@ -129,7 +129,8 @@ impl GeneticOptimizer {
     /// genomes.  Each command in a genome is formed by combining a random
     /// operator (0‒7) with a random 32‑bit parameter encoded in the upper
     /// bits.  The best genome is initialized to the first genome.
-    pub fn initialize_population(&mut self, num_nodes: usize, initial_edges: Vec<(usize, usize)>, seed: u64) {
+    pub fn initialize_population(&mut self, num_nodes: usize, initial_edges: Vec<(usize, usize)>, seed: u64, gene_length: usize) {
+        self.gene_length = gene_length;
         // Build the base graph used as the starting point for all genomes.
         let mut base = GraphState::new(num_nodes);
         base.set_edges(&initial_edges);
