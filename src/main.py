@@ -1,6 +1,11 @@
 import os
 import random
 import logging
+import argparse
+import json
+from datetime import datetime
+from dataclasses import asdict
+
 
 import numpy as np
 import torch
@@ -24,20 +29,54 @@ logger = logging.getLogger(__name__)
 #  Main Function
 # --------------------------
 def main():
+    # 1. PARSE CLI ARGUMENTS
+    parser = argparse.ArgumentParser(description="Graph Generation Experiment")
+    parser.add_argument("--seed", type=int, default=None, help="Override random seed")
+    parser.add_argument("--dataset", type=str, default=None, help="Override dataset name")
+    args = parser.parse_args()
+
     config = Config()
+
+    # Override config if CLI args are provided
+    if args.seed is not None:
+        config.seed = args.seed
+    if args.dataset is not None:
+        config.dataset_name = args.dataset
+    
+    # CREATE DYNAMIC DIRECTORY STRUCTURE
+    # Format: results/<Dataset>/<Timestamp>_Seed<Seed>/
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_name = f"{timestamp}_Seed{config.seed}"
+
+    # Update config paths to point to this specific run directory
+    config.results_dir = os.path.join(config.results_dir, config.dataset_name, run_name)
+    config.save_dir = os.path.join(config.save_dir, config.dataset_name, run_name)
+
+    # Setup directories
+    os.makedirs(config.save_dir, exist_ok=True)
+    os.makedirs(config.results_dir, exist_ok=True)
+
+    # Save the full configuration state for reproducibility
+    params_file = os.path.join(config.results_dir, "parameters.txt")
+    with open(params_file, "w") as f:
+        json.dump(asdict(config), f, indent=4)
+    logger.info(f"Configuration saved to {params_file}")
+
+    log_file = os.path.join(config.results_dir, 'training_log.txt')
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logging.getLogger().addHandler(file_handler)
+    logger.info(f"Logging to file: {log_file}")
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info(f"Device: {device}")
 
-    # Fixed seeds for reproducibility (optional)
+    # Fixed seeds for reproducibility
     torch.manual_seed(config.seed)
     np.random.seed(config.seed)
     random.seed(config.seed)
     if device.type == 'cuda':
         torch.cuda.manual_seed_all(config.seed)
-
-    # Setup directories
-    os.makedirs(config.save_dir, exist_ok=True)
-    os.makedirs(config.results_dir, exist_ok=True)
 
     # Load dataset
     dataset = TUDataset(root=config.data_dir, name=config.dataset_name).shuffle()
