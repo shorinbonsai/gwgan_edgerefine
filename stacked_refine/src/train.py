@@ -191,13 +191,13 @@ def evaluate(generator: nn.Module, discriminator: nn.Module, labels: Iterable[in
     real_stats = compute_graph_statistics(real_graphs, num_bins=config.num_bins)
     fake_stats = compute_graph_statistics(fake_graphs, num_bins=config.num_bins)
 
-    mmd_overall_degree = compute_mmd(real_stats['degrees'], fake_stats['degrees'], kernel='rbf', gamma=1.0)
-    mmd_overall_clustering = compute_mmd(real_stats['clustering'], fake_stats['clustering'], kernel='rbf', gamma=1.0)
-    mmd_overall_spectral = compute_mmd(real_stats['spectral'], fake_stats['spectral'], kernel='rbf', gamma=0.1)
+    mmd_overall_degree = compute_mmd(real_stats['degrees'], fake_stats['degrees'], kernel='rbf', gamma=config.gammas['degree'])
+    mmd_overall_clustering = compute_mmd(real_stats['clustering'], fake_stats['clustering'], kernel='rbf', gamma=config.gammas['clustering'])
+    mmd_overall_spectral = compute_mmd(real_stats['spectral'], fake_stats['spectral'], kernel='rbf', gamma=config.gammas['spectral'])
 
     total_combined = (config.weights['degree'] * mmd_overall_degree +
                                      config.weights['clustering'] * mmd_overall_clustering +
-                                     config.weights['spectral'] * mmd_overall_spectral[class_label])
+                                     config.weights['spectral'] * mmd_overall_spectral)
 
     # ------------------------------
     # Compute MMD for each graph statistic
@@ -224,9 +224,24 @@ def evaluate(generator: nn.Module, discriminator: nn.Module, labels: Iterable[in
                     f"Avg edges: {np.mean(fake_stats['num_edges']):.1f}±{np.std(fake_stats['num_edges']):.1f}")
 
         # Compute MMDs
-        mmd_degree[class_label] = compute_mmd(real_stats['degrees'], fake_stats['degrees'], kernel='rbf', gamma=1.0)
-        mmd_clustering[class_label] = compute_mmd(real_stats['clustering'], fake_stats['clustering'], kernel='rbf', gamma=1.0)
-        mmd_spectral[class_label] = compute_mmd(real_stats['spectral'], fake_stats['spectral'], kernel='rbf', gamma=0.1)
+        mmd_degree[class_label] = compute_mmd(
+            real_stats['degrees'], 
+            fake_stats['degrees'], 
+            kernel='rbf', 
+            gamma=config.gammas['degree']
+        )
+        mmd_clustering[class_label] = compute_mmd(
+            real_stats['clustering'], 
+            fake_stats['clustering'], 
+            kernel='rbf', 
+            gamma=config.gammas['clustering']
+        )
+        mmd_spectral[class_label] = compute_mmd(
+            real_stats['spectral'], 
+            fake_stats['spectral'], 
+            kernel='rbf', 
+            gamma=config.gammas['spectral']
+        )
 
         logger.info(f"MMD Degree {class_label}: {mmd_degree[class_label]:.6f}")
         logger.info(f"MMD Clustering {class_label}: {mmd_clustering[class_label]:.6f}")
