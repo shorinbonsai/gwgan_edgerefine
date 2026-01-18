@@ -44,9 +44,9 @@ class Config:
     refinement_log_interval: int = 1  
     
     # GA Parameters
-    refiner_pop_size: int = 50
+    refiner_pop_size: int = 100
     # refiner_gene_len: int = 60
-    refiner_gens: int = 50
+    refiner_gens: int = 100
     lambda_refine: float = 1.0  # Weight for the refinement loss
 
     crossover_probability: float = 0.5
