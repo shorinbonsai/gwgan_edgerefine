@@ -215,12 +215,32 @@ def main():
                 refiner.load_initial_graph(num_nodes, edges_list, config.seed + i + batch_idx*1000, dynamic_gene_len)
                 
                 stats = target_distributions[label]
+                # Calculate Target Edge Count for this Class
+                # We calculate the average edges from the training data for this specific class
+                class_train_graphs = train_graphs_by_class[label]
+                if len(class_train_graphs) > 0:
+                    # PyG 'num_edges' is usually 2x for undirected, so divide by 2 for logical edges
+                    avg_edges = float(sum(d.edge_index.size(1) for d in class_train_graphs) / len(class_train_graphs)) / 2.0
+                else:
+                    avg_edges = float(dataset_stats[1]['mean']) # Fallback
+
+                # Edge Penalty Weight
+                # A weight of 0.1 means being off by 10 edges costs 1.0 (equivalent to a bad MMD score)
+                edge_pen_weight = 0.05
+
+                fixed_gammas = (0.05, 0.05, config.gammas['spectral'])
+
                 refiner.set_target_statistics(
                     stats['degree'][0], stats['degree'][1], stats['degree'][2],
                     stats['clustering'][0], stats['clustering'][1], stats['clustering'][2],
                     stats['spectral'][0], stats['spectral'][1], stats['spectral'][2],
-                    w_tup, g_tup
+                    w_tup, g_tup,
+                    fixed_gammas,    # <--- Passing the lowered gammas
+                    avg_edges,       # <--- Passing target edges
+                    edge_pen_weight
                 )
+
+                logger.info(f"Avg_edges: {avg_edges}")
                 
                 # Run Evolution
                 refiner.evolve(config.refiner_gens, 42 + i)

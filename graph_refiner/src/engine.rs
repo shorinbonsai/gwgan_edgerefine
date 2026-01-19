@@ -64,6 +64,9 @@ pub struct GeneticOptimizer {
     op_weights: Vec<f64>,
     crossover_prob: f64,
     mutation_prob: f64,
+    target_edge_count: f64,
+    edge_penalty_weight: f64,
+
     pub history: Vec<GenerationStats>,
 }
 
@@ -99,6 +102,8 @@ impl GeneticOptimizer {
 
             crossover_prob: 1.0,
             mutation_prob: 1.0,
+            target_edge_count: 0.0,
+            edge_penalty_weight: 0.0,
             history: Vec::new(),
         }
     }
@@ -166,7 +171,9 @@ impl GeneticOptimizer {
         target_clustering: Vec<Vec<f64>>, clustering_mean: Vec<f64>, clustering_std: Vec<f64>,
         target_spectral: Vec<Vec<f64>>, spectral_mean: Vec<f64>, spectral_std: Vec<f64>,
         weights: (f64, f64, f64),
-        gammas: (f64, f64, f64)
+        gammas: (f64, f64, f64),
+        target_edge_count: f64, 
+        edge_penalty_weight: f64
     ) {
         self.target_degrees = target_degrees;
         self.degree_mean = degree_mean;
@@ -186,6 +193,9 @@ impl GeneticOptimizer {
         self.gamma_degree = gammas.0;
         self.gamma_clustering = gammas.1;
         self.gamma_spectral = gammas.2;
+
+        self.target_edge_count = target_edge_count;
+        self.edge_penalty_weight = edge_penalty_weight;
     }
 
     /// Decode and apply the commands in `genome` to `base_graph` to produce
@@ -246,8 +256,13 @@ impl GeneticOptimizer {
         let score_clust = crate::stats::compute_mmd(&clust, &self.target_clustering, &self.clustering_mean, &self.clustering_std, self.gamma_clustering);
         let score_spec = crate::stats::compute_mmd(&spec, &self.target_spectral, &self.spectral_mean, &self.spectral_std, self.gamma_spectral);
 
+        let current_edge_count: f64 = (graph.adjacency.iter().map(|n| n.len()).sum::<usize>() / 2) as f64;
+        // Simple Absolute Difference Penalty
+        let edge_diff = (current_edge_count - self.target_edge_count).abs();
+        let edge_penalty = edge_diff * self.edge_penalty_weight;
+
         // Weighted Sum of Errors
-        (score_deg * self.weights.0) + (score_clust * self.weights.1) + (score_spec * self.weights.2)
+        (score_deg * self.weights.0) + (score_clust * self.weights.1) + (score_spec * self.weights.2) + edge_penalty
     }
 
     /// Tournament Selection: Picks `k` random individuals and returns the best one.

@@ -60,13 +60,17 @@ impl GraphRefiner {
         target_clustering: Vec<Vec<f64>>, clust_mean: Vec<f64>, clust_std: Vec<f64>,
         target_spectral: Vec<Vec<f64>>, spec_mean: Vec<f64>, spec_std: Vec<f64>,
         weights: (f64, f64, f64),
-        gammas: (f64, f64, f64) 
+        gammas: (f64, f64, f64),
+        target_edge_count: f64,
+        edge_penalty_weight: f64
     ) {
         self.optimizer.set_targets(
             target_degrees, degree_mean, degree_std,
             target_clustering, clust_mean, clust_std,
             target_spectral, spec_mean, spec_std,
-            weights, gammas
+            weights, gammas,
+            target_edge_count,
+            edge_penalty_weight
         );
     }
 
