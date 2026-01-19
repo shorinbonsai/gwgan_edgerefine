@@ -261,11 +261,6 @@ def main():
         raw_save_path = os.path.join(config.results_dir, f"{config.dataset_name}_raw_results.txt") # NEW
         raw_score = evaluate_graph_sets(raw_graphs_list, real_test_graphs, train_loader, labels, config, logger, phase="RAW", save_path=raw_save_path) # NEW: Passed train_loader and save_path
 
-        
-        # Optional: Evaluate Raw Graphs for comparison
-        logger.info("\n>>> Evaluating Raw WGAN Graphs (Pre-Refinement) <<<")
-        raw_score = evaluate_graph_sets(raw_graphs_list, real_test_graphs, labels, config, logger, phase="RAW")
-
         # Visualize
         visualize_custom_list(refined_graphs_list[:6], "Refined Samples", os.path.join(config.results_dir, "refined_samples.png"))
         visualize_custom_list(raw_graphs_list[:6], "Raw Samples", os.path.join(config.results_dir, "raw_samples.png"))
