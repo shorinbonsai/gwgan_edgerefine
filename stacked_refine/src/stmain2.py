@@ -219,7 +219,8 @@ def main():
                     stats['degree'][0], stats['degree'][1], stats['degree'][2],
                     stats['clustering'][0], stats['clustering'][1], stats['clustering'][2],
                     stats['spectral'][0], stats['spectral'][1], stats['spectral'][2],
-                    w_tup, g_tup
+                    w_tup, g_tup,
+                    int(global_max_degree)
                 )
                 
                 # Run Evolution

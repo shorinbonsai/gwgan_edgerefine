@@ -3,26 +3,34 @@ use nalgebra::{DMatrix, SymmetricEigen};
 
 /// Compute the degree distribution histogram of the graph.
 /// Matches Python `utils.py` behavior: range is adaptive per graph.
-pub fn degree_distribution(graph: &GraphState, num_bins: usize) -> Vec<f64> {
+pub fn degree_distribution(graph: &GraphState, num_bins: usize, fixed_max: usize) -> Vec<f64> {
     if graph.num_nodes ==0 {return vec![0.0; num_bins];}
     let degrees: Vec<usize> = (0..graph.num_nodes).map(|n| graph.degree(n)).collect();
-    let local_max_degree = *degrees.iter().max().unwrap_or(&0);
+    // let local_max_degree = *degrees.iter().max().unwrap_or(&0);
 
     let mut hist = vec![0.0; num_bins];
 
     // In Python utils.py: range=(0, max(int(deg.max()), num_bins))
-    let range_max = std::cmp::max(local_max_degree, num_bins);
+    // let range_max = std::cmp::max(local_max_degree, num_bins);
+    let range_max = std::cmp::max(fixed_max, num_bins);
 
-    for &deg in &degrees {
-        // Map degree 'd' to a bin index.
-        // Logic: bin_idx = floor(deg / (range_max / num_bins))
-        let bin_idx = if range_max == 0 {
-            0
-        } else {
-            std::cmp::min(deg * num_bins / range_max, num_bins - 1)
-        };
+    for i in 0..graph.num_nodes {
+        let deg = graph.degree(i);
+        // Any degree > fixed_max falls into the last bin
+        let bin_idx = std::cmp::min(deg * num_bins / range_max, num_bins - 1);
         hist[bin_idx] += 1.0;
     }
+
+    // for &deg in &degrees {
+    //     // Map degree 'd' to a bin index.
+    //     // Logic: bin_idx = floor(deg / (range_max / num_bins))
+    //     let bin_idx = if range_max == 0 {
+    //         0
+    //     } else {
+    //         std::cmp::min(deg * num_bins / range_max, num_bins - 1)
+    //     };
+    //     hist[bin_idx] += 1.0;
+    // }
     // Normalize to probability distribution.
     let sum: f64 = hist.iter().sum();
     if sum > 0.0 {

@@ -24,7 +24,8 @@ fn setup_optimizer() -> GeneticOptimizer {
         empty_dist.clone(), empty_stats.clone(), unity_std.clone(), // clustering: std=1.0
         empty_dist.clone(), empty_stats.clone(), unity_std.clone(), // spectral: std=1.0
         (1.0, 1.0, 1.0), 
-        (1.0, 1.0, 1.0)
+        (1.0, 1.0, 1.0),
+        100,
     );
     
     optimizer
