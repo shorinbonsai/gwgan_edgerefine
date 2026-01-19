@@ -145,7 +145,9 @@ impl GeneticOptimizer {
             .expect("Invalid weights provided (e.g., all zero)");
 
         self.population.clear();
-        for _ in 0..self.population_size {
+        let identity_genome = vec![8u64; self.gene_length];
+        self.population.push(identity_genome);
+        for _ in 0..(self.population_size - 1) {
             let mut genome = Vec::with_capacity(self.gene_length);
             for _ in 0..self.gene_length {
                 genome.push(Self::generate_gene(&mut rng, &dist));

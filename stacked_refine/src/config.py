@@ -44,18 +44,18 @@ class Config:
     refinement_log_interval: int = 1  
     
     # GA Parameters
-    refiner_pop_size: int = 100
+    refiner_pop_size: int = 300
     # refiner_gene_len: int = 60
-    refiner_gens: int = 100
+    refiner_gens: int = 200
     lambda_refine: float = 1.0  # Weight for the refinement loss
 
     crossover_probability: float = 0.5
     mutation_probability: float = 0.8
 
     # Weights for the 9 graph operations:
-    # [Toggle, LocalToggle, Hop, Add, Delete, Swap, LocalAdd, LocalDelete, Null]
+    # [Toggle, Hop, Add, Delete, Swap, LocalToggle, LocalAdd, LocalDelete, Null]
     refinement_op_weights: List[float] = field(default_factory=lambda: [
-        1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+        0.1, 1.0, 1.0, 1.0, 1.0, 0.1, 1.0, 1.0, 1.0
     ])
 
     gammas: Dict[str, float] = field(default_factory=lambda: {'degree': 1.0, 'clustering': 1.0, 'spectral': 0.1})
