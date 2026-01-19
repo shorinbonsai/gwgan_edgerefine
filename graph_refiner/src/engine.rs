@@ -65,7 +65,6 @@ pub struct GeneticOptimizer {
     crossover_prob: f64,
     mutation_prob: f64,
     pub history: Vec<GenerationStats>,
-    global_max_degree: usize,
 }
 
 impl GeneticOptimizer {
@@ -101,7 +100,6 @@ impl GeneticOptimizer {
             crossover_prob: 1.0,
             mutation_prob: 1.0,
             history: Vec::new(),
-            global_max_degree: 100,
         }
     }
 
@@ -147,9 +145,7 @@ impl GeneticOptimizer {
             .expect("Invalid weights provided (e.g., all zero)");
 
         self.population.clear();
-        let identity_genome = vec![8u64; self.gene_length];
-        self.population.push(identity_genome);
-        for _ in 0..(self.population_size - 1) {
+        for _ in 0..self.population_size {
             let mut genome = Vec::with_capacity(self.gene_length);
             for _ in 0..self.gene_length {
                 genome.push(Self::generate_gene(&mut rng, &dist));
@@ -168,8 +164,7 @@ impl GeneticOptimizer {
         target_clustering: Vec<Vec<f64>>, clustering_mean: Vec<f64>, clustering_std: Vec<f64>,
         target_spectral: Vec<Vec<f64>>, spectral_mean: Vec<f64>, spectral_std: Vec<f64>,
         weights: (f64, f64, f64),
-        gammas: (f64, f64, f64),
-        global_max_degree: usize
+        gammas: (f64, f64, f64)
     ) {
         self.target_degrees = target_degrees;
         self.degree_mean = degree_mean;
@@ -189,7 +184,6 @@ impl GeneticOptimizer {
         self.gamma_degree = gammas.0;
         self.gamma_clustering = gammas.1;
         self.gamma_spectral = gammas.2;
-        self.global_max_degree = global_max_degree;
     }
 
     /// Decode and apply the commands in `genome` to `base_graph` to produce
@@ -241,8 +235,7 @@ impl GeneticOptimizer {
     fn calculate_fitness(&self, genome: &[u64], base: &GraphState) -> f64 {
         let graph = self.express(genome, base);
         
-        // let deg = crate::stats::degree_distribution(&graph, 10);
-        let deg = crate::stats::degree_distribution(&graph, 10, self.global_max_degree);
+        let deg = crate::stats::degree_distribution(&graph, 10);
         let clust = crate::stats::clustering_distribution(&graph, 10);
         let spec = crate::stats::spectral_features(&graph, 10);
 

@@ -48,11 +48,10 @@ def main():
     if args.dataset is not None:
         config.dataset_name = args.dataset
     
-    # 2. CREATE DYNAMIC DIRECTORY STRUCTURE (Date/Time based)
+    # CREATE DYNAMIC DIRECTORY STRUCTURE
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_name = f"{timestamp}_Seed{config.seed}"
 
-    # Update results path to include the timestamped folder
     config.results_dir = os.path.join(config.results_dir, config.dataset_name, run_name)
     config.save_dir = os.path.join(config.save_dir, config.dataset_name, run_name)
 
@@ -103,10 +102,6 @@ def main():
     # Analyze statistics
     dataset_stats_result = analyze_dataset_statistics(train_dataset, dataset.num_classes)
     dataset_stats = dataset_stats_result[:2]
-    logger.info(f"Node Summary: {dataset_stats[0]}")
-    logger.info(f"Edge Summary: {dataset_stats[1]}")
-    global_max_degree = dataset_stats_result[2] 
-    logger.info(f"Global Max Degree: {global_max_degree}")
     
     # --- PRE-COMPUTE TARGET STATISTICS FOR RUST REFINER ---
     logger.info("Computing target statistics for Graph Refiner...")
@@ -151,18 +146,10 @@ def main():
     logger.info(">>> PHASE 2: Evolutionary Edge Refinement <<<")
     logger.info("=" * 50)
     
-    # Placeholders for final scores
-    refined_score = 0.0
-    raw_score = 0.0
-    
     if config.use_refinement:
         refined_graphs_list = []
         raw_graphs_list = [] # Keep for comparison
         real_test_graphs = []
-        
-        # Create directory for GA logs
-        ga_log_dir = os.path.join(config.results_dir, "ga_logs")
-        os.makedirs(ga_log_dir, exist_ok=True)
         
         # 1. Gather all real test graphs
         for batch in test_loader:
@@ -207,6 +194,8 @@ def main():
                 edge_index = g.edge_index
                 for e_i in range(edge_index.size(1)):
                     u, v = int(edge_index[0, e_i].item()), int(edge_index[1, e_i].item())
+                    # Rust expects undirected unique edges (u < v) usually, but implementation handles redundant add calls.
+                    # Best to pass all unique pairs.
                     if u < v:
                         edges_list.append((u, v))
                 
@@ -224,16 +213,6 @@ def main():
                 
                 # Run Evolution
                 refiner.evolve(config.refiner_gens, 42 + i)
-
-                # 3. GA PROCESS LOGGING
-                # Save logs for the first graph of each batch to monitor evolution without spamming files
-                if i == 0:
-                    log_name = f"batch_{batch_idx}_graph_{0}"
-                    try:
-                        refiner.save_logs(os.path.join(ga_log_dir, f"{log_name}_history.csv"))
-                        refiner.save_results(os.path.join(ga_log_dir, f"{log_name}_best.txt"))
-                    except Exception as e:
-                        logger.warning(f"Failed to save GA logs: {e}")
                 
                 # Retrieve Best Edges
                 best_edges = refiner.get_best_graph()
@@ -254,44 +233,16 @@ def main():
 
         # 3. Final Evaluation of Refined Graphs
         logger.info("\n>>> Evaluating Refined Graphs <<<")
-        refined_save_path = os.path.join(config.results_dir, f"{config.dataset_name}_refined_results.txt") 
-        refined_score = evaluate_graph_sets(refined_graphs_list, real_test_graphs, train_loader, labels, config, logger, phase="REFINED", save_path=refined_save_path) # NEW: Passed train_loader and save_path
-
+        evaluate_graph_sets(refined_graphs_list, real_test_graphs, labels, config, logger, phase="REFINED")
+        
+        # Optional: Evaluate Raw Graphs for comparison
         logger.info("\n>>> Evaluating Raw WGAN Graphs (Pre-Refinement) <<<")
-        raw_save_path = os.path.join(config.results_dir, f"{config.dataset_name}_raw_results.txt") # NEW
-        raw_score = evaluate_graph_sets(raw_graphs_list, real_test_graphs, train_loader, labels, config, logger, phase="RAW", save_path=raw_save_path) # NEW: Passed train_loader and save_path
+        evaluate_graph_sets(raw_graphs_list, real_test_graphs, labels, config, logger, phase="RAW")
 
         # Visualize
         visualize_custom_list(refined_graphs_list[:6], "Refined Samples", os.path.join(config.results_dir, "refined_samples.png"))
         visualize_custom_list(raw_graphs_list[:6], "Raw Samples", os.path.join(config.results_dir, "raw_samples.png"))
 
-
-        # 4. SUMMARY REPORT
-        logger.info("Generating summary report...")
-        summary_path = os.path.join(config.results_dir, "summary_report.txt")
-        with open(summary_path, "w") as f:
-            f.write("Experiment Summary Report\n")
-            f.write("=========================\n")
-            f.write(f"Date: {timestamp}\n")
-            f.write(f"Dataset: {config.dataset_name}\n")
-            f.write(f"Seed: {config.seed}\n\n")
-            
-            f.write("Performance Metrics (MMD - Lower is Better)\n")
-            f.write("-------------------------------------------\n")
-
-            f.write(f"Raw WGAN MMD:      {raw_score:.6f}\n")
-            f.write(f"Refined Graph MMD: {refined_score:.6f}\n")
-            improvement = raw_score - refined_score
-            f.write(f"Net Improvement:   {improvement:.6f}\n")
-            if improvement > 0:
-                f.write("Result: Refinement IMPROVED the distribution matching.\n")
-            else:
-                f.write("Result: Refinement DID NOT improve the distribution matching.\n")
-            f.write("\nConfiguration Details\n")
-            f.write(f"Refiner Generations: {config.refiner_gens}\n")
-            f.write(f"Refiner Pop Size:    {config.refiner_pop_size}\n")
-        
-        logger.info(f"Summary report saved to: {summary_path}")
     else:
         logger.info("Refinement skipped (config.use_refinement = False)")
 
@@ -300,16 +251,13 @@ def main():
 # --------------------------
 #  Custom Helpers for List-based Eval
 # --------------------------
-def evaluate_graph_sets(fake_graphs, real_graphs, train_loader, labels, config, logger, phase="TEST", save_path=None):
+def evaluate_graph_sets(fake_graphs, real_graphs, labels, config, logger, phase="TEST"):
     # Group by class
     real_by_class = {c: [] for c in labels}
     fake_by_class = {c: [] for c in labels}
-
-    for g in real_graphs: 
-        if g.y is not None: real_by_class[int(g.y.item())].append(g)
-    for g in fake_graphs: 
-        if g.y is not None: fake_by_class[int(g.y.item())].append(g)
-
+    
+    for g in real_graphs: real_by_class[int(g.y.item())].append(g)
+    for g in fake_graphs: fake_by_class[int(g.y.item())].append(g)
 
     # Compute Overall MMD
     logger.info(f"\n--- {phase} EVALUATION RESULTS ---")
@@ -325,70 +273,22 @@ def evaluate_graph_sets(fake_graphs, real_graphs, train_loader, labels, config, 
     
     logger.info(f"Overall MMD: {combined:.6f} (Deg: {mmd_deg:.4f}, Clus: {mmd_clus:.4f}, Spec: {mmd_spec:.4f})")
     
-    output_lines = []
-    output_lines.append(f"{phase} Graph Generation Evaluation Results")
-    output_lines.append("=" * 50 + "\n")
-    output_lines.append(f"  Overall MMD Degree: {mmd_deg:.6f}")
-    output_lines.append(f"  Overall MMD Clustering: {mmd_clus:.6f}")
-    output_lines.append(f"  Overall MMD Spectral: {mmd_spec:.6f}")
-    output_lines.append(f"  Overall MMD Combined: {combined:.6f}")
-
-    # Pre-compute training hashes for novelty calculation (per class)
-    train_hashes_by_class = {c: set() for c in labels}
-    device = fake_graphs[0].x.device if len(fake_graphs) > 0 else torch.device('cpu')
-    
-    if train_loader:
-        for batch in train_loader:
-            if hasattr(batch, 'batch'):
-                batch = batch.to(device)
-                b_graphs = extract_individual_graphs(batch)
-                for bg in b_graphs:
-                    if bg.y is not None:
-                         train_hashes_by_class[int(bg.y.item())].add(wl_graph_hash(bg))
-
     # Per Class Stats
     for c in labels:
         if len(real_by_class[c]) == 0 or len(fake_by_class[c]) == 0: continue
         
-        r_graphs = real_by_class[c]
-        f_graphs = fake_by_class[c]
+        r_stats = compute_graph_statistics(real_by_class[c], config.num_bins)
+        f_stats = compute_graph_statistics(fake_by_class[c], config.num_bins)
         
-        r_stats = compute_graph_statistics(r_graphs, config.num_bins)
-        f_stats = compute_graph_statistics(f_graphs, config.num_bins)
-        
-        # Per Class MMDs
-        m_deg = compute_mmd(r_stats['degrees'], f_stats['degrees'], gamma=config.gammas['degree'])
-        m_clus = compute_mmd(r_stats['clustering'], f_stats['clustering'], gamma=config.gammas['clustering'])
-        m_spec = compute_mmd(r_stats['spectral'], f_stats['spectral'], gamma=config.gammas['spectral'])
-        m_comb = (config.weights['degree']*m_deg + config.weights['clustering']*m_clus + config.weights['spectral']*m_spec)
-
         # Calculate Uniqueness/Novelty
-        fake_hashes = [wl_graph_hash(g) for g in f_graphs]
-        uniqueness = len(set(fake_hashes)) / len(fake_hashes) if fake_hashes else 0.0
+        fake_hashes = [wl_graph_hash(g) for g in fake_by_class[c]]
+        unique_hashes = set(fake_hashes)
+        uniqueness = len(unique_hashes) / len(fake_hashes) if fake_hashes else 0.0
         
-        # Novelty: check against training hashes of same class
-        t_hashes = train_hashes_by_class[c]
-        novel_count = sum(1 for h in fake_hashes if h not in t_hashes)
-        novelty = novel_count / len(fake_hashes) if fake_hashes else 0.0
+        # For novelty, we technically need the training set, but comparing to test set is a proxy
+        # or we could load training set hashes. For now, simple uniqueness is good.
         
-        logger.info(f"Class {c}: Nodes {np.mean(f_stats['num_nodes']):.1f} | MMD {m_comb:.4f} | Uni {uniqueness:.2f} | Nov {novelty:.2f}")
-
-        output_lines.append(f"Class {c}:")
-        output_lines.append(f"  Sample size: {len(r_graphs)} real, {len(f_graphs)} generated")
-        output_lines.append(f"  MMD Degree: {m_deg:.6f}")
-        output_lines.append(f"  MMD Clustering: {m_clus:.6f}")
-        output_lines.append(f"  MMD Spectral: {m_spec:.6f}")
-        output_lines.append(f"  MMD Combined: {m_comb:.6f}")
-        output_lines.append(f"  Uniqueness: {uniqueness:.6f}")
-        output_lines.append(f"  Novelty: {novelty:.6f}")
-        output_lines.append(f"  Avg Nodes: {np.mean(r_stats['num_nodes']):.1f} -> {np.mean(f_stats['num_nodes']):.1f}")
-        output_lines.append(f"  Avg Edges: {np.mean(r_stats['num_edges']):.1f} -> {np.mean(f_stats['num_edges']):.1f}\n")
-
-    # Write to file if path provided
-    if save_path:
-        with open(save_path, 'w') as f:
-            f.write('\n'.join(output_lines))
-        logger.info(f"Detailed results saved to: {save_path}")
+        logger.info(f"Class {c}: Nodes {np.mean(f_stats['num_nodes']):.1f} | Edges {np.mean(f_stats['num_edges']):.1f} | Uniqueness {uniqueness:.2f}")
 
     return combined
 
