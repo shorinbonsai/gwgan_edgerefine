@@ -29,6 +29,128 @@ import graph_refiner
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# --------------------------
+#  Data Collection Helpers
+# --------------------------
+class NumpyEncoder(json.JSONEncoder):
+    """ Special json encoder for numpy types """
+    def default(self, obj):
+        if isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
+                            np.int16, np.int32, np.int64, np.uint8,
+                            np.uint16, np.uint32, np.uint64)):
+            return int(obj)
+        elif isinstance(obj, (np.float_, np.float16, np.float32,
+                              np.float64)):
+            return float(obj)
+        elif isinstance(obj, (np.ndarray,)):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
+def save_graph_structures(graphs, filename, logger):
+    """
+    Saves a list of PyG Data objects to a JSON file in a parseable format.
+    Format:
+    [
+      {
+        "id": 0,
+        "label": 1,
+        "num_nodes": 20,
+        "num_edges": 45,
+        "edges": [[u1, v1], [u2, v2], ...]
+      }, ...
+    ]
+    """
+    data_list = []
+    for i, g in enumerate(graphs):
+        # Extract Label
+        label = int(g.y.item()) if g.y is not None else -1
+        
+        # Extract Edges
+        edges = []
+        if g.edge_index is not None and g.edge_index.size(1) > 0:
+            # Convert to list of lists [[u,v], [u,v]]
+            edge_tensor = g.edge_index.t().cpu().numpy()
+            edges = edge_tensor.tolist()
+
+        graph_data = {
+            "id": i,
+            "label": label,
+            "num_nodes": int(g.x.size(0)),
+            "num_edges": len(edges), # Directed count as stored in edge_index
+            "edges": edges
+        }
+        data_list.append(graph_data)
+
+    try:
+        with open(filename, 'w') as f:
+            json.dump(data_list, f, indent=None, cls=NumpyEncoder)
+        logger.info(f"Saved {len(graphs)} graph structures to {filename}")
+    except Exception as e:
+        logger.error(f"Failed to save graph structures: {e}")
+
+def compute_and_save_detailed_stats(graphs, config, filename, logger):
+    """
+    Computes detailed statistics (Degree, Clustering, Spectral, Node/Edge counts)
+    separated by class label and saves to JSON.
+    """
+    if not graphs:
+        logger.warning("No graphs provided for statistics calculation.")
+        return
+
+    # Group by Class
+    graphs_by_class = {}
+    for g in graphs:
+        label = int(g.y.item()) if g.y is not None else -1
+        if label not in graphs_by_class:
+            graphs_by_class[label] = []
+        graphs_by_class[label].append(g)
+
+    output_stats = {}
+
+    for label, class_graphs in graphs_by_class.items():
+        if not class_graphs:
+            continue
+            
+        # 1. Basic Counts (Nodes / Edges)
+        num_nodes = [g.x.size(0) for g in class_graphs]
+        # edge_index is usually undirected (2 entries per edge). 
+        # We report logical edges (div 2) if assumed undirected, but here we report raw count / 2 usually
+        num_edges = [g.edge_index.size(1) / 2.0 for g in class_graphs]
+        
+        basic_stats = {
+            "avg_nodes": float(np.mean(num_nodes)),
+            "std_nodes": float(np.std(num_nodes)),
+            "avg_edges": float(np.mean(num_edges)),
+            "std_edges": float(np.std(num_edges)),
+            "count": len(class_graphs)
+        }
+
+        # 2. Advanced Stats (Degree, Clustering, Spectral)
+        # compute_graph_statistics returns dictionaries of numpy arrays [N_graphs, Num_Bins]
+        raw_stats = compute_graph_statistics(class_graphs, num_bins=config.num_bins)
+        
+        # Calculate Mean Distributions
+        # degree_dist: shape (N, bins) -> Mean over axis 0 -> (bins,)
+        avg_degree_dist = np.mean(raw_stats['degrees'], axis=0).tolist()
+        avg_clustering_dist = np.mean(raw_stats['clustering'], axis=0).tolist()
+        avg_spectral_dist = np.mean(raw_stats['spectral'], axis=0).tolist()
+
+        output_stats[label] = {
+            "basic": basic_stats,
+            "distributions": {
+                "degree": avg_degree_dist,
+                "clustering": avg_clustering_dist,
+                "spectral": avg_spectral_dist
+            }
+        }
+
+    try:
+        with open(filename, 'w') as f:
+            json.dump(output_stats, f, indent=4, cls=NumpyEncoder)
+        logger.info(f"Saved detailed statistics to {filename}")
+    except Exception as e:
+        logger.error(f"Failed to save statistics: {e}")
+
 
 # --------------------------
 #  Main Function
@@ -168,6 +290,12 @@ def main():
         for batch in test_loader:
             batch = batch.to(device)
             real_test_graphs.extend(extract_individual_graphs(batch))
+
+        # --- SAVE REAL GRAPH STATISTICS ---
+        logger.info("Saving Real (Test) graph statistics and structures...")
+        save_graph_structures(real_test_graphs, os.path.join(config.results_dir, "real_graphs.json"), logger)
+        compute_and_save_detailed_stats(real_test_graphs, config, os.path.join(config.results_dir, "real_stats.json"), logger)
+
             
         # 2. Generate and Refine corresponding fake graphs
         # We iterate over test_loader to ensure we generate same label distribution and count
@@ -226,7 +354,7 @@ def main():
 
                 # Edge Penalty Weight
                 # A weight of 0.1 means being off by 10 edges costs 1.0 (equivalent to a bad MMD score)
-                edge_pen_weight = 0.05
+                edge_pen_weight = 0.01
 
                 fixed_gammas = (0.01, 0.01, 0.5)
 
@@ -245,7 +373,7 @@ def main():
                 # Run Evolution
                 refiner.evolve(config.refiner_gens, 42 + i)
 
-                # 3. GA PROCESS LOGGING
+                # GA PROCESS LOGGING
                 # Save logs for the first graph of each batch to monitor evolution without spamming files
                 if i == 0:
                     log_name = f"batch_{batch_idx}_graph_{0}"
@@ -272,21 +400,31 @@ def main():
             if (batch_idx + 1) % 5 == 0:
                 logger.info(f"Processed batch {batch_idx + 1}/{len(test_loader)}")
 
-        # 3. Final Evaluation of Refined Graphs
+        # --- SAVE RAW & REFINED GRAPH STATISTICS ---
+        logger.info("Saving Raw and Refined graph statistics and structures...")
+        
+        save_graph_structures(raw_graphs_list, os.path.join(config.results_dir, "raw_graphs.json"), logger)
+        compute_and_save_detailed_stats(raw_graphs_list, config, os.path.join(config.results_dir, "raw_stats.json"), logger)
+        
+        save_graph_structures(refined_graphs_list, os.path.join(config.results_dir, "refined_graphs.json"), logger)
+        compute_and_save_detailed_stats(refined_graphs_list, config, os.path.join(config.results_dir, "refined_stats.json"), logger)
+
+
+        # Final Evaluation of Refined Graphs
         logger.info("\n>>> Evaluating Refined Graphs <<<")
         refined_save_path = os.path.join(config.results_dir, f"{config.dataset_name}_refined_results.txt") 
-        refined_score = evaluate_graph_sets(refined_graphs_list, real_test_graphs, train_loader, labels, config, logger, phase="REFINED", save_path=refined_save_path) # NEW: Passed train_loader and save_path
+        refined_score = evaluate_graph_sets(refined_graphs_list, real_test_graphs, train_loader, labels, config, logger, phase="REFINED", save_path=refined_save_path) 
 
         logger.info("\n>>> Evaluating Raw WGAN Graphs (Pre-Refinement) <<<")
-        raw_save_path = os.path.join(config.results_dir, f"{config.dataset_name}_raw_results.txt") # NEW
-        raw_score = evaluate_graph_sets(raw_graphs_list, real_test_graphs, train_loader, labels, config, logger, phase="RAW", save_path=raw_save_path) # NEW: Passed train_loader and save_path
+        raw_save_path = os.path.join(config.results_dir, f"{config.dataset_name}_raw_results.txt")
+        raw_score = evaluate_graph_sets(raw_graphs_list, real_test_graphs, train_loader, labels, config, logger, phase="RAW", save_path=raw_save_path) 
 
         # Visualize
         visualize_custom_list(refined_graphs_list[:6], "Refined Samples", os.path.join(config.results_dir, "refined_samples.png"))
         visualize_custom_list(raw_graphs_list[:6], "Raw Samples", os.path.join(config.results_dir, "raw_samples.png"))
 
 
-        # 4. SUMMARY REPORT
+        # SUMMARY REPORT
         logger.info("Generating summary report...")
         summary_path = os.path.join(config.results_dir, "summary_report.txt")
         with open(summary_path, "w") as f:
