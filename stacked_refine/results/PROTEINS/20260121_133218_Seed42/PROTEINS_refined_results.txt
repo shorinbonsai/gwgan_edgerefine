@@ -1,0 +1,28 @@
+REFINED Graph Generation Evaluation Results
+==================================================
+
+  Overall MMD Degree: 0.067515
+  Overall MMD Clustering: 0.034053
+  Overall MMD Spectral: 0.011658
+  Overall MMD Combined: 0.037373
+Class 0:
+  Sample size: 104 real, 104 generated
+  MMD Degree: 0.074075
+  MMD Clustering: 0.045758
+  MMD Spectral: 0.025663
+  MMD Combined: 0.048224
+  Uniqueness: 0.759615
+  Novelty: 0.471154
+  Avg Nodes: 54.5 -> 47.2
+  Avg Edges: 103.0 -> 95.0
+
+Class 1:
+  Sample size: 64 real, 64 generated
+  MMD Degree: 0.110288
+  MMD Clustering: 0.062313
+  MMD Spectral: 0.070869
+  MMD Combined: 0.079272
+  Uniqueness: 0.640625
+  Novelty: 0.312500
+  Avg Nodes: 19.6 -> 24.0
+  Avg Edges: 36.5 -> 40.1

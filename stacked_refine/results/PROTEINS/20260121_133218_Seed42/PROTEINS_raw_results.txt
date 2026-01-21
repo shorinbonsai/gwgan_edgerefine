@@ -1,0 +1,28 @@
+RAW Graph Generation Evaluation Results
+==================================================
+
+  Overall MMD Degree: 0.059214
+  Overall MMD Clustering: 0.038666
+  Overall MMD Spectral: 0.065901
+  Overall MMD Combined: 0.053001
+Class 0:
+  Sample size: 104 real, 104 generated
+  MMD Degree: 0.058735
+  MMD Clustering: 0.047233
+  MMD Spectral: 0.175511
+  MMD Combined: 0.089167
+  Uniqueness: 0.913462
+  Novelty: 0.990385
+  Avg Nodes: 54.5 -> 47.2
+  Avg Edges: 103.0 -> 111.2
+
+Class 1:
+  Sample size: 64 real, 64 generated
+  MMD Degree: 0.090614
+  MMD Clustering: 0.057418
+  MMD Spectral: 0.076106
+  MMD Combined: 0.072983
+  Uniqueness: 0.937500
+  Novelty: 0.875000
+  Avg Nodes: 19.6 -> 24.0
+  Avg Edges: 36.5 -> 52.0

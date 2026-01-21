@@ -1,0 +1,806 @@
+2026-01-21 13:32:18,896 - INFO - Logging to file: ./results/PROTEINS/20260121_133218_Seed42/training_log.txt
+2026-01-21 13:32:18,896 - INFO - Device: cuda
+2026-01-21 13:32:18,899 - INFO - Dataset: PROTEINS
+2026-01-21 13:32:18,899 - INFO - Train: 779, Val: 166, Test: 168
+2026-01-21 13:32:18,987 - INFO - Node Summary: {0: {'min': 4, 'max': 620, 'mean': 48.67903930131004, 'std': 57.33289404598735}, 1: {'min': 4, 'max': 150, 'mean': 23.781931464174455, 'std': 22.648109629496574}}
+2026-01-21 13:32:18,987 - INFO - Edge Summary: {0: {'min': 6, 'max': 1049, 'mean': 91.60480349344978, 'std': 106.33355147396418}, 1: {'min': 5, 'max': 271, 'mean': 42.77881619937695, 'std': 38.73720453802837}}
+2026-01-21 13:32:18,987 - INFO - Global Max Degree: 25
+2026-01-21 13:32:18,987 - INFO - Computing target statistics for Graph Refiner...
+2026-01-21 13:32:19,770 - INFO - Target statistics computed.
+2026-01-21 13:32:19,933 - INFO - >>> PHASE 1: Training WGAN (No Refinement) <<<
+2026-01-21 13:32:19,933 - INFO - Starting training...
+2026-01-21 13:32:19,933 - INFO - Monitoring: MMD (weighted)
+2026-01-21 13:33:25,201 - INFO - 
+--- Class 0 ---
+2026-01-21 13:33:25,201 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:33:25,509 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:33:25,509 - INFO - Fake - Avg nodes: 47.8±24.0, Avg edges: 111.1±99.5
+2026-01-21 13:33:25,510 - INFO - MMD Degree 0: 0.064678
+2026-01-21 13:33:25,510 - INFO - MMD Clustering 0: 0.039925
+2026-01-21 13:33:25,510 - INFO - MMD Spectral 0: 0.182950
+2026-01-21 13:33:25,510 - INFO - MMD Combined 0: 0.090259
+2026-01-21 13:33:31,280 - INFO - Uniqueness: 0.960
+2026-01-21 13:33:31,280 - INFO - Novelty: 1.000
+2026-01-21 13:33:31,280 - INFO - 
+--- Class 1 ---
+2026-01-21 13:33:31,280 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:33:31,402 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:33:31,402 - INFO - Fake - Avg nodes: 23.4±10.5, Avg edges: 50.1±38.5
+2026-01-21 13:33:31,402 - INFO - MMD Degree 1: 0.073062
+2026-01-21 13:33:31,402 - INFO - MMD Clustering 1: 0.051920
+2026-01-21 13:33:31,402 - INFO - MMD Spectral 1: 0.058743
+2026-01-21 13:33:31,402 - INFO - MMD Combined 1: 0.060309
+2026-01-21 13:33:36,898 - INFO - Uniqueness: 0.954
+2026-01-21 13:33:36,898 - INFO - Novelty: 0.892
+2026-01-21 13:33:36,898 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:33:36,898 - INFO - Combined MMD: 0.092538
+2026-01-21 13:33:36,900 - INFO - Epoch 01 | D_loss: 9.140169 | G_loss: -0.138689 | Val: 0.092538
+2026-01-21 13:33:36,901 - INFO - Saved best model to ./saved_models/PROTEINS/20260121_133218_Seed42/PROTEINS_best_model.pt
+2026-01-21 13:34:44,297 - INFO - 
+--- Class 0 ---
+2026-01-21 13:34:44,297 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:34:44,617 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:34:44,617 - INFO - Fake - Avg nodes: 53.0±26.8, Avg edges: 137.2±118.4
+2026-01-21 13:34:44,618 - INFO - MMD Degree 0: 0.065698
+2026-01-21 13:34:44,618 - INFO - MMD Clustering 0: 0.040350
+2026-01-21 13:34:44,618 - INFO - MMD Spectral 0: 0.166153
+2026-01-21 13:34:44,618 - INFO - MMD Combined 0: 0.085695
+2026-01-21 13:34:50,373 - INFO - Uniqueness: 0.950
+2026-01-21 13:34:50,373 - INFO - Novelty: 1.000
+2026-01-21 13:34:50,373 - INFO - 
+--- Class 1 ---
+2026-01-21 13:34:50,373 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:34:50,493 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:34:50,493 - INFO - Fake - Avg nodes: 22.8±11.1, Avg edges: 48.8±42.9
+2026-01-21 13:34:50,494 - INFO - MMD Degree 1: 0.070119
+2026-01-21 13:34:50,494 - INFO - MMD Clustering 1: 0.055005
+2026-01-21 13:34:50,494 - INFO - MMD Spectral 1: 0.068352
+2026-01-21 13:34:50,494 - INFO - MMD Combined 1: 0.063543
+2026-01-21 13:34:55,992 - INFO - Uniqueness: 0.954
+2026-01-21 13:34:55,992 - INFO - Novelty: 0.954
+2026-01-21 13:34:55,992 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:34:55,992 - INFO - Combined MMD: 0.092499
+2026-01-21 13:34:55,994 - INFO - Epoch 02 | D_loss: 6.756039 | G_loss: -0.094824 | Val: 0.092499
+2026-01-21 13:34:55,995 - INFO - Saved best model to ./saved_models/PROTEINS/20260121_133218_Seed42/PROTEINS_best_model.pt
+2026-01-21 13:36:01,740 - INFO - 
+--- Class 0 ---
+2026-01-21 13:36:01,740 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:36:02,065 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:36:02,065 - INFO - Fake - Avg nodes: 46.5±26.9, Avg edges: 112.2±115.6
+2026-01-21 13:36:02,066 - INFO - MMD Degree 0: 0.064605
+2026-01-21 13:36:02,066 - INFO - MMD Clustering 0: 0.038901
+2026-01-21 13:36:02,066 - INFO - MMD Spectral 0: 0.173146
+2026-01-21 13:36:02,066 - INFO - MMD Combined 0: 0.086886
+2026-01-21 13:36:07,814 - INFO - Uniqueness: 0.970
+2026-01-21 13:36:07,814 - INFO - Novelty: 1.000
+2026-01-21 13:36:07,814 - INFO - 
+--- Class 1 ---
+2026-01-21 13:36:07,814 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:36:07,939 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:36:07,939 - INFO - Fake - Avg nodes: 25.5±10.0, Avg edges: 57.1±41.3
+2026-01-21 13:36:07,940 - INFO - MMD Degree 1: 0.069879
+2026-01-21 13:36:07,940 - INFO - MMD Clustering 1: 0.046926
+2026-01-21 13:36:07,940 - INFO - MMD Spectral 1: 0.045824
+2026-01-21 13:36:07,940 - INFO - MMD Combined 1: 0.053481
+2026-01-21 13:36:13,465 - INFO - Uniqueness: 0.969
+2026-01-21 13:36:13,465 - INFO - Novelty: 0.908
+2026-01-21 13:36:13,465 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:36:13,465 - INFO - Combined MMD: 0.090782
+2026-01-21 13:36:13,466 - INFO - Epoch 03 | D_loss: 3.024790 | G_loss: -0.187918 | Val: 0.090782
+2026-01-21 13:36:13,468 - INFO - Saved best model to ./saved_models/PROTEINS/20260121_133218_Seed42/PROTEINS_best_model.pt
+2026-01-21 13:37:20,709 - INFO - 
+--- Class 0 ---
+2026-01-21 13:37:20,709 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:37:21,042 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:37:21,042 - INFO - Fake - Avg nodes: 50.4±26.9, Avg edges: 126.8±117.2
+2026-01-21 13:37:21,043 - INFO - MMD Degree 0: 0.063370
+2026-01-21 13:37:21,043 - INFO - MMD Clustering 0: 0.039064
+2026-01-21 13:37:21,043 - INFO - MMD Spectral 0: 0.187247
+2026-01-21 13:37:21,043 - INFO - MMD Combined 0: 0.090811
+2026-01-21 13:37:26,799 - INFO - Uniqueness: 0.970
+2026-01-21 13:37:26,799 - INFO - Novelty: 1.000
+2026-01-21 13:37:26,799 - INFO - 
+--- Class 1 ---
+2026-01-21 13:37:26,799 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:37:26,924 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:37:26,924 - INFO - Fake - Avg nodes: 25.5±10.1, Avg edges: 57.4±45.0
+2026-01-21 13:37:26,925 - INFO - MMD Degree 1: 0.068298
+2026-01-21 13:37:26,925 - INFO - MMD Clustering 1: 0.047368
+2026-01-21 13:37:26,925 - INFO - MMD Spectral 1: 0.069431
+2026-01-21 13:37:26,925 - INFO - MMD Combined 1: 0.060266
+2026-01-21 13:37:32,436 - INFO - Uniqueness: 0.969
+2026-01-21 13:37:32,436 - INFO - Novelty: 0.969
+2026-01-21 13:37:32,436 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:37:32,436 - INFO - Combined MMD: 0.089165
+2026-01-21 13:37:32,437 - INFO - Epoch 04 | D_loss: 0.041099 | G_loss: -0.514205 | Val: 0.089165
+2026-01-21 13:37:32,439 - INFO - Saved best model to ./saved_models/PROTEINS/20260121_133218_Seed42/PROTEINS_best_model.pt
+2026-01-21 13:38:38,563 - INFO - 
+--- Class 0 ---
+2026-01-21 13:38:38,563 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:38:38,902 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:38:38,902 - INFO - Fake - Avg nodes: 51.0±27.7, Avg edges: 130.8±126.6
+2026-01-21 13:38:38,903 - INFO - MMD Degree 0: 0.066268
+2026-01-21 13:38:38,903 - INFO - MMD Clustering 0: 0.038385
+2026-01-21 13:38:38,903 - INFO - MMD Spectral 0: 0.179564
+2026-01-21 13:38:38,903 - INFO - MMD Combined 0: 0.089104
+2026-01-21 13:38:44,679 - INFO - Uniqueness: 0.941
+2026-01-21 13:38:44,679 - INFO - Novelty: 1.000
+2026-01-21 13:38:44,679 - INFO - 
+--- Class 1 ---
+2026-01-21 13:38:44,679 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:38:44,803 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:38:44,803 - INFO - Fake - Avg nodes: 25.1±9.5, Avg edges: 54.9±35.1
+2026-01-21 13:38:44,803 - INFO - MMD Degree 1: 0.066852
+2026-01-21 13:38:44,803 - INFO - MMD Clustering 1: 0.050235
+2026-01-21 13:38:44,804 - INFO - MMD Spectral 1: 0.065753
+2026-01-21 13:38:44,804 - INFO - MMD Combined 1: 0.059876
+2026-01-21 13:38:50,329 - INFO - Uniqueness: 0.938
+2026-01-21 13:38:50,329 - INFO - Novelty: 0.908
+2026-01-21 13:38:50,329 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:38:50,329 - INFO - Combined MMD: 0.089404
+2026-01-21 13:38:50,331 - INFO - Epoch 05 | D_loss: -0.007930 | G_loss: -0.895288 | Val: 0.089404
+2026-01-21 13:39:54,465 - INFO - 
+--- Class 0 ---
+2026-01-21 13:39:54,465 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:39:54,810 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:39:54,810 - INFO - Fake - Avg nodes: 45.5±26.1, Avg edges: 106.9±117.1
+2026-01-21 13:39:54,810 - INFO - MMD Degree 0: 0.065195
+2026-01-21 13:39:54,810 - INFO - MMD Clustering 0: 0.042463
+2026-01-21 13:39:54,810 - INFO - MMD Spectral 0: 0.183950
+2026-01-21 13:39:54,811 - INFO - MMD Combined 0: 0.091729
+2026-01-21 13:40:00,567 - INFO - Uniqueness: 0.960
+2026-01-21 13:40:00,567 - INFO - Novelty: 1.000
+2026-01-21 13:40:00,567 - INFO - 
+--- Class 1 ---
+2026-01-21 13:40:00,567 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:40:00,688 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:40:00,688 - INFO - Fake - Avg nodes: 22.3±10.8, Avg edges: 46.8±39.5
+2026-01-21 13:40:00,688 - INFO - MMD Degree 1: 0.074144
+2026-01-21 13:40:00,688 - INFO - MMD Clustering 1: 0.055188
+2026-01-21 13:40:00,688 - INFO - MMD Spectral 1: 0.065743
+2026-01-21 13:40:00,688 - INFO - MMD Combined 1: 0.064041
+2026-01-21 13:40:06,209 - INFO - Uniqueness: 0.923
+2026-01-21 13:40:06,209 - INFO - Novelty: 0.923
+2026-01-21 13:40:06,209 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:40:06,209 - INFO - Combined MMD: 0.085432
+2026-01-21 13:40:06,211 - INFO - Epoch 06 | D_loss: 0.216301 | G_loss: -1.035644 | Val: 0.085432
+2026-01-21 13:40:06,212 - INFO - Saved best model to ./saved_models/PROTEINS/20260121_133218_Seed42/PROTEINS_best_model.pt
+2026-01-21 13:41:12,864 - INFO - 
+--- Class 0 ---
+2026-01-21 13:41:12,864 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:41:13,198 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:41:13,198 - INFO - Fake - Avg nodes: 47.8±28.3, Avg edges: 119.6±117.4
+2026-01-21 13:41:13,199 - INFO - MMD Degree 0: 0.072967
+2026-01-21 13:41:13,199 - INFO - MMD Clustering 0: 0.051197
+2026-01-21 13:41:13,199 - INFO - MMD Spectral 0: 0.196353
+2026-01-21 13:41:13,199 - INFO - MMD Combined 0: 0.101275
+2026-01-21 13:41:18,940 - INFO - Uniqueness: 0.911
+2026-01-21 13:41:18,940 - INFO - Novelty: 1.000
+2026-01-21 13:41:18,940 - INFO - 
+--- Class 1 ---
+2026-01-21 13:41:18,940 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:41:19,061 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:41:19,061 - INFO - Fake - Avg nodes: 22.7±11.4, Avg edges: 49.0±44.7
+2026-01-21 13:41:19,061 - INFO - MMD Degree 1: 0.072009
+2026-01-21 13:41:19,061 - INFO - MMD Clustering 1: 0.058678
+2026-01-21 13:41:19,061 - INFO - MMD Spectral 1: 0.054894
+2026-01-21 13:41:19,061 - INFO - MMD Combined 1: 0.061542
+2026-01-21 13:41:24,566 - INFO - Uniqueness: 0.846
+2026-01-21 13:41:24,567 - INFO - Novelty: 0.831
+2026-01-21 13:41:24,567 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:41:24,567 - INFO - Combined MMD: 0.092568
+2026-01-21 13:41:24,568 - INFO - Epoch 07 | D_loss: 0.416035 | G_loss: -1.009091 | Val: 0.092568
+2026-01-21 13:42:27,188 - INFO - 
+--- Class 0 ---
+2026-01-21 13:42:27,188 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:42:27,509 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:42:27,509 - INFO - Fake - Avg nodes: 47.2±29.0, Avg edges: 119.0±123.2
+2026-01-21 13:42:27,509 - INFO - MMD Degree 0: 0.072613
+2026-01-21 13:42:27,509 - INFO - MMD Clustering 0: 0.059102
+2026-01-21 13:42:27,509 - INFO - MMD Spectral 0: 0.175249
+2026-01-21 13:42:27,509 - INFO - MMD Combined 0: 0.097999
+2026-01-21 13:42:33,266 - INFO - Uniqueness: 0.911
+2026-01-21 13:42:33,266 - INFO - Novelty: 1.000
+2026-01-21 13:42:33,266 - INFO - 
+--- Class 1 ---
+2026-01-21 13:42:33,266 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:42:33,394 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:42:33,394 - INFO - Fake - Avg nodes: 26.3±10.3, Avg edges: 61.0±42.0
+2026-01-21 13:42:33,394 - INFO - MMD Degree 1: 0.069600
+2026-01-21 13:42:33,395 - INFO - MMD Clustering 1: 0.045915
+2026-01-21 13:42:33,395 - INFO - MMD Spectral 1: 0.066626
+2026-01-21 13:42:33,395 - INFO - MMD Combined 1: 0.059233
+2026-01-21 13:42:38,909 - INFO - Uniqueness: 0.969
+2026-01-21 13:42:38,909 - INFO - Novelty: 0.954
+2026-01-21 13:42:38,909 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:42:38,909 - INFO - Combined MMD: 0.079510
+2026-01-21 13:42:38,911 - INFO - Epoch 08 | D_loss: 0.558847 | G_loss: -0.920382 | Val: 0.079510
+2026-01-21 13:42:38,912 - INFO - Saved best model to ./saved_models/PROTEINS/20260121_133218_Seed42/PROTEINS_best_model.pt
+2026-01-21 13:43:46,330 - INFO - 
+--- Class 0 ---
+2026-01-21 13:43:46,330 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:43:46,674 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:43:46,674 - INFO - Fake - Avg nodes: 51.9±28.6, Avg edges: 136.6±128.9
+2026-01-21 13:43:46,674 - INFO - MMD Degree 0: 0.066451
+2026-01-21 13:43:46,674 - INFO - MMD Clustering 0: 0.046069
+2026-01-21 13:43:46,675 - INFO - MMD Spectral 0: 0.161430
+2026-01-21 13:43:46,675 - INFO - MMD Combined 0: 0.086792
+2026-01-21 13:43:52,420 - INFO - Uniqueness: 0.950
+2026-01-21 13:43:52,420 - INFO - Novelty: 1.000
+2026-01-21 13:43:52,420 - INFO - 
+--- Class 1 ---
+2026-01-21 13:43:52,420 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:43:52,542 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:43:52,542 - INFO - Fake - Avg nodes: 23.8±10.4, Avg edges: 51.3±38.7
+2026-01-21 13:43:52,543 - INFO - MMD Degree 1: 0.069414
+2026-01-21 13:43:52,543 - INFO - MMD Clustering 1: 0.051454
+2026-01-21 13:43:52,543 - INFO - MMD Spectral 1: 0.059956
+2026-01-21 13:43:52,543 - INFO - MMD Combined 1: 0.059393
+2026-01-21 13:43:58,052 - INFO - Uniqueness: 0.954
+2026-01-21 13:43:58,052 - INFO - Novelty: 0.846
+2026-01-21 13:43:58,052 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:43:58,052 - INFO - Combined MMD: 0.090786
+2026-01-21 13:43:58,053 - INFO - Epoch 09 | D_loss: 0.681374 | G_loss: -0.653581 | Val: 0.090786
+2026-01-21 13:45:01,586 - INFO - 
+--- Class 0 ---
+2026-01-21 13:45:01,586 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:45:01,910 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:45:01,910 - INFO - Fake - Avg nodes: 45.7±27.9, Avg edges: 111.4±122.1
+2026-01-21 13:45:01,911 - INFO - MMD Degree 0: 0.072552
+2026-01-21 13:45:01,911 - INFO - MMD Clustering 0: 0.050901
+2026-01-21 13:45:01,911 - INFO - MMD Spectral 0: 0.156486
+2026-01-21 13:45:01,911 - INFO - MMD Combined 0: 0.089072
+2026-01-21 13:45:07,670 - INFO - Uniqueness: 0.901
+2026-01-21 13:45:07,671 - INFO - Novelty: 1.000
+2026-01-21 13:45:07,671 - INFO - 
+--- Class 1 ---
+2026-01-21 13:45:07,671 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:45:07,779 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:45:07,779 - INFO - Fake - Avg nodes: 22.4±11.2, Avg edges: 47.5±41.1
+2026-01-21 13:45:07,779 - INFO - MMD Degree 1: 0.071852
+2026-01-21 13:45:07,779 - INFO - MMD Clustering 1: 0.054844
+2026-01-21 13:45:07,779 - INFO - MMD Spectral 1: 0.062918
+2026-01-21 13:45:07,779 - INFO - MMD Combined 1: 0.062368
+2026-01-21 13:45:13,362 - INFO - Uniqueness: 0.923
+2026-01-21 13:45:13,362 - INFO - Novelty: 0.892
+2026-01-21 13:45:13,362 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:45:13,362 - INFO - Combined MMD: 0.088101
+2026-01-21 13:45:13,363 - INFO - Epoch 10 | D_loss: 0.781306 | G_loss: -0.255558 | Val: 0.088101
+2026-01-21 13:46:19,187 - INFO - 
+--- Class 0 ---
+2026-01-21 13:46:19,187 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:46:19,522 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:46:19,522 - INFO - Fake - Avg nodes: 48.7±28.6, Avg edges: 123.9±115.3
+2026-01-21 13:46:19,523 - INFO - MMD Degree 0: 0.067239
+2026-01-21 13:46:19,523 - INFO - MMD Clustering 0: 0.047179
+2026-01-21 13:46:19,523 - INFO - MMD Spectral 0: 0.175224
+2026-01-21 13:46:19,523 - INFO - MMD Combined 0: 0.091610
+2026-01-21 13:46:25,357 - INFO - Uniqueness: 0.941
+2026-01-21 13:46:25,357 - INFO - Novelty: 0.990
+2026-01-21 13:46:25,357 - INFO - 
+--- Class 1 ---
+2026-01-21 13:46:25,357 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:46:25,480 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:46:25,480 - INFO - Fake - Avg nodes: 23.8±11.1, Avg edges: 52.6±46.6
+2026-01-21 13:46:25,481 - INFO - MMD Degree 1: 0.071635
+2026-01-21 13:46:25,481 - INFO - MMD Clustering 1: 0.050111
+2026-01-21 13:46:25,481 - INFO - MMD Spectral 1: 0.061919
+2026-01-21 13:46:25,481 - INFO - MMD Combined 1: 0.060111
+2026-01-21 13:46:30,992 - INFO - Uniqueness: 0.938
+2026-01-21 13:46:30,992 - INFO - Novelty: 0.862
+2026-01-21 13:46:30,992 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:46:30,992 - INFO - Combined MMD: 0.088116
+2026-01-21 13:46:30,994 - INFO - Epoch 11 | D_loss: 1.010728 | G_loss: 0.167217 | Val: 0.088116
+2026-01-21 13:47:34,125 - INFO - 
+--- Class 0 ---
+2026-01-21 13:47:34,125 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:47:34,472 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:47:34,472 - INFO - Fake - Avg nodes: 50.7±27.4, Avg edges: 129.2±121.7
+2026-01-21 13:47:34,473 - INFO - MMD Degree 0: 0.065519
+2026-01-21 13:47:34,473 - INFO - MMD Clustering 0: 0.040712
+2026-01-21 13:47:34,473 - INFO - MMD Spectral 0: 0.183085
+2026-01-21 13:47:34,473 - INFO - MMD Combined 0: 0.090866
+2026-01-21 13:47:40,236 - INFO - Uniqueness: 0.960
+2026-01-21 13:47:40,236 - INFO - Novelty: 1.000
+2026-01-21 13:47:40,236 - INFO - 
+--- Class 1 ---
+2026-01-21 13:47:40,236 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:47:40,356 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:47:40,357 - INFO - Fake - Avg nodes: 21.9±11.2, Avg edges: 45.9±42.2
+2026-01-21 13:47:40,357 - INFO - MMD Degree 1: 0.072909
+2026-01-21 13:47:40,357 - INFO - MMD Clustering 1: 0.055491
+2026-01-21 13:47:40,357 - INFO - MMD Spectral 1: 0.057780
+2026-01-21 13:47:40,357 - INFO - MMD Combined 1: 0.061403
+2026-01-21 13:47:45,874 - INFO - Uniqueness: 0.908
+2026-01-21 13:47:45,874 - INFO - Novelty: 0.877
+2026-01-21 13:47:45,874 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:47:45,874 - INFO - Combined MMD: 0.080910
+2026-01-21 13:47:45,875 - INFO - Epoch 12 | D_loss: 1.452589 | G_loss: 0.465843 | Val: 0.080910
+2026-01-21 13:48:54,384 - INFO - 
+--- Class 0 ---
+2026-01-21 13:48:54,384 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:48:54,722 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:48:54,722 - INFO - Fake - Avg nodes: 51.1±27.0, Avg edges: 129.6±112.5
+2026-01-21 13:48:54,723 - INFO - MMD Degree 0: 0.067572
+2026-01-21 13:48:54,723 - INFO - MMD Clustering 0: 0.044252
+2026-01-21 13:48:54,723 - INFO - MMD Spectral 0: 0.161254
+2026-01-21 13:48:54,723 - INFO - MMD Combined 0: 0.086349
+2026-01-21 13:49:00,475 - INFO - Uniqueness: 0.941
+2026-01-21 13:49:00,475 - INFO - Novelty: 1.000
+2026-01-21 13:49:00,475 - INFO - 
+--- Class 1 ---
+2026-01-21 13:49:00,475 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:49:00,600 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:49:00,600 - INFO - Fake - Avg nodes: 25.2±11.1, Avg edges: 57.9±48.5
+2026-01-21 13:49:00,601 - INFO - MMD Degree 1: 0.068119
+2026-01-21 13:49:00,601 - INFO - MMD Clustering 1: 0.048428
+2026-01-21 13:49:00,601 - INFO - MMD Spectral 1: 0.051741
+2026-01-21 13:49:00,601 - INFO - MMD Combined 1: 0.055329
+2026-01-21 13:49:06,116 - INFO - Uniqueness: 0.954
+2026-01-21 13:49:06,116 - INFO - Novelty: 0.862
+2026-01-21 13:49:06,116 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:49:06,116 - INFO - Combined MMD: 0.091365
+2026-01-21 13:49:06,117 - INFO - Epoch 13 | D_loss: 1.448699 | G_loss: 0.624451 | Val: 0.091365
+2026-01-21 13:50:12,792 - INFO - 
+--- Class 0 ---
+2026-01-21 13:50:12,792 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:50:13,147 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:50:13,148 - INFO - Fake - Avg nodes: 54.5±28.7, Avg edges: 147.7±133.9
+2026-01-21 13:50:13,148 - INFO - MMD Degree 0: 0.067389
+2026-01-21 13:50:13,148 - INFO - MMD Clustering 0: 0.040233
+2026-01-21 13:50:13,148 - INFO - MMD Spectral 0: 0.160248
+2026-01-21 13:50:13,148 - INFO - MMD Combined 0: 0.084384
+2026-01-21 13:50:18,901 - INFO - Uniqueness: 0.941
+2026-01-21 13:50:18,901 - INFO - Novelty: 1.000
+2026-01-21 13:50:18,901 - INFO - 
+--- Class 1 ---
+2026-01-21 13:50:18,901 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:50:19,025 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:50:19,025 - INFO - Fake - Avg nodes: 24.2±10.3, Avg edges: 52.6±43.2
+2026-01-21 13:50:19,025 - INFO - MMD Degree 1: 0.068653
+2026-01-21 13:50:19,025 - INFO - MMD Clustering 1: 0.046067
+2026-01-21 13:50:19,025 - INFO - MMD Spectral 1: 0.048757
+2026-01-21 13:50:19,025 - INFO - MMD Combined 1: 0.053650
+2026-01-21 13:50:24,622 - INFO - Uniqueness: 0.923
+2026-01-21 13:50:24,622 - INFO - Novelty: 0.846
+2026-01-21 13:50:24,622 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:50:24,622 - INFO - Combined MMD: 0.082756
+2026-01-21 13:50:24,624 - INFO - Epoch 14 | D_loss: 1.698720 | G_loss: 0.870440 | Val: 0.082756
+2026-01-21 13:51:27,481 - INFO - 
+--- Class 0 ---
+2026-01-21 13:51:27,481 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:51:27,815 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:51:27,815 - INFO - Fake - Avg nodes: 47.5±28.8, Avg edges: 120.0±130.7
+2026-01-21 13:51:27,815 - INFO - MMD Degree 0: 0.070593
+2026-01-21 13:51:27,815 - INFO - MMD Clustering 0: 0.045795
+2026-01-21 13:51:27,815 - INFO - MMD Spectral 0: 0.180245
+2026-01-21 13:51:27,815 - INFO - MMD Combined 0: 0.093569
+2026-01-21 13:51:33,565 - INFO - Uniqueness: 0.921
+2026-01-21 13:51:33,565 - INFO - Novelty: 1.000
+2026-01-21 13:51:33,565 - INFO - 
+--- Class 1 ---
+2026-01-21 13:51:33,565 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:51:33,687 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:51:33,687 - INFO - Fake - Avg nodes: 24.0±10.7, Avg edges: 52.7±39.3
+2026-01-21 13:51:33,688 - INFO - MMD Degree 1: 0.075945
+2026-01-21 13:51:33,688 - INFO - MMD Clustering 1: 0.054044
+2026-01-21 13:51:33,688 - INFO - MMD Spectral 1: 0.072203
+2026-01-21 13:51:33,688 - INFO - MMD Combined 1: 0.066062
+2026-01-21 13:51:39,200 - INFO - Uniqueness: 0.908
+2026-01-21 13:51:39,200 - INFO - Novelty: 0.862
+2026-01-21 13:51:39,200 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:51:39,200 - INFO - Combined MMD: 0.085675
+2026-01-21 13:51:39,201 - INFO - Epoch 15 | D_loss: 1.810157 | G_loss: 1.109701 | Val: 0.085675
+2026-01-21 13:52:44,108 - INFO - 
+--- Class 0 ---
+2026-01-21 13:52:44,108 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:52:44,454 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:52:44,454 - INFO - Fake - Avg nodes: 48.5±28.7, Avg edges: 123.5±129.9
+2026-01-21 13:52:44,455 - INFO - MMD Degree 0: 0.067660
+2026-01-21 13:52:44,455 - INFO - MMD Clustering 0: 0.045699
+2026-01-21 13:52:44,455 - INFO - MMD Spectral 0: 0.156331
+2026-01-21 13:52:44,455 - INFO - MMD Combined 0: 0.085477
+2026-01-21 13:52:50,227 - INFO - Uniqueness: 0.941
+2026-01-21 13:52:50,227 - INFO - Novelty: 1.000
+2026-01-21 13:52:50,227 - INFO - 
+--- Class 1 ---
+2026-01-21 13:52:50,227 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:52:50,350 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:52:50,350 - INFO - Fake - Avg nodes: 23.9±11.6, Avg edges: 53.7±42.6
+2026-01-21 13:52:50,350 - INFO - MMD Degree 1: 0.071998
+2026-01-21 13:52:50,350 - INFO - MMD Clustering 1: 0.054417
+2026-01-21 13:52:50,350 - INFO - MMD Spectral 1: 0.069259
+2026-01-21 13:52:50,350 - INFO - MMD Combined 1: 0.064144
+2026-01-21 13:52:55,868 - INFO - Uniqueness: 0.969
+2026-01-21 13:52:55,869 - INFO - Novelty: 0.923
+2026-01-21 13:52:55,869 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:52:55,869 - INFO - Combined MMD: 0.082322
+2026-01-21 13:52:55,870 - INFO - Epoch 16 | D_loss: 2.089675 | G_loss: 1.260883 | Val: 0.082322
+2026-01-21 13:54:02,787 - INFO - 
+--- Class 0 ---
+2026-01-21 13:54:02,788 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:54:03,138 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:54:03,138 - INFO - Fake - Avg nodes: 49.8±27.9, Avg edges: 126.5±123.9
+2026-01-21 13:54:03,139 - INFO - MMD Degree 0: 0.065284
+2026-01-21 13:54:03,139 - INFO - MMD Clustering 0: 0.041970
+2026-01-21 13:54:03,139 - INFO - MMD Spectral 0: 0.166483
+2026-01-21 13:54:03,139 - INFO - MMD Combined 0: 0.086319
+2026-01-21 13:54:08,874 - INFO - Uniqueness: 0.960
+2026-01-21 13:54:08,874 - INFO - Novelty: 1.000
+2026-01-21 13:54:08,874 - INFO - 
+--- Class 1 ---
+2026-01-21 13:54:08,874 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:54:08,998 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:54:08,998 - INFO - Fake - Avg nodes: 25.0±10.5, Avg edges: 55.8±40.7
+2026-01-21 13:54:08,998 - INFO - MMD Degree 1: 0.071928
+2026-01-21 13:54:08,998 - INFO - MMD Clustering 1: 0.049974
+2026-01-21 13:54:08,998 - INFO - MMD Spectral 1: 0.045535
+2026-01-21 13:54:08,998 - INFO - MMD Combined 1: 0.055229
+2026-01-21 13:54:14,515 - INFO - Uniqueness: 0.923
+2026-01-21 13:54:14,515 - INFO - Novelty: 0.769
+2026-01-21 13:54:14,515 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:54:14,515 - INFO - Combined MMD: 0.076757
+2026-01-21 13:54:14,517 - INFO - Epoch 17 | D_loss: 2.288999 | G_loss: 1.176017 | Val: 0.076757
+2026-01-21 13:54:14,518 - INFO - Saved best model to ./saved_models/PROTEINS/20260121_133218_Seed42/PROTEINS_best_model.pt
+2026-01-21 13:55:20,053 - INFO - 
+--- Class 0 ---
+2026-01-21 13:55:20,053 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:55:20,392 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:55:20,392 - INFO - Fake - Avg nodes: 50.2±25.2, Avg edges: 122.8±107.0
+2026-01-21 13:55:20,393 - INFO - MMD Degree 0: 0.064869
+2026-01-21 13:55:20,393 - INFO - MMD Clustering 0: 0.039425
+2026-01-21 13:55:20,393 - INFO - MMD Spectral 0: 0.129009
+2026-01-21 13:55:20,393 - INFO - MMD Combined 0: 0.073933
+2026-01-21 13:55:26,154 - INFO - Uniqueness: 0.970
+2026-01-21 13:55:26,154 - INFO - Novelty: 0.980
+2026-01-21 13:55:26,154 - INFO - 
+--- Class 1 ---
+2026-01-21 13:55:26,154 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:55:26,279 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:55:26,279 - INFO - Fake - Avg nodes: 24.8±11.8, Avg edges: 57.6±54.7
+2026-01-21 13:55:26,280 - INFO - MMD Degree 1: 0.068853
+2026-01-21 13:55:26,280 - INFO - MMD Clustering 1: 0.050805
+2026-01-21 13:55:26,280 - INFO - MMD Spectral 1: 0.047462
+2026-01-21 13:55:26,280 - INFO - MMD Combined 1: 0.055217
+2026-01-21 13:55:31,792 - INFO - Uniqueness: 0.938
+2026-01-21 13:55:31,792 - INFO - Novelty: 0.831
+2026-01-21 13:55:31,792 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:55:31,792 - INFO - Combined MMD: 0.081334
+2026-01-21 13:55:31,793 - INFO - Epoch 18 | D_loss: 2.440007 | G_loss: 1.033548 | Val: 0.081334
+2026-01-21 13:56:36,734 - INFO - 
+--- Class 0 ---
+2026-01-21 13:56:36,734 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:56:37,097 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:56:37,097 - INFO - Fake - Avg nodes: 54.5±27.8, Avg edges: 145.7±123.8
+2026-01-21 13:56:37,098 - INFO - MMD Degree 0: 0.066347
+2026-01-21 13:56:37,098 - INFO - MMD Clustering 0: 0.039633
+2026-01-21 13:56:37,098 - INFO - MMD Spectral 0: 0.083271
+2026-01-21 13:56:37,098 - INFO - MMD Combined 0: 0.060739
+2026-01-21 13:56:42,862 - INFO - Uniqueness: 0.950
+2026-01-21 13:56:42,862 - INFO - Novelty: 0.990
+2026-01-21 13:56:42,862 - INFO - 
+--- Class 1 ---
+2026-01-21 13:56:42,862 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:56:43,060 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:56:43,060 - INFO - Fake - Avg nodes: 24.6±11.1, Avg edges: 55.6±46.4
+2026-01-21 13:56:43,061 - INFO - MMD Degree 1: 0.070189
+2026-01-21 13:56:43,061 - INFO - MMD Clustering 1: 0.047808
+2026-01-21 13:56:43,061 - INFO - MMD Spectral 1: 0.063124
+2026-01-21 13:56:43,061 - INFO - MMD Combined 1: 0.059117
+2026-01-21 13:56:48,643 - INFO - Uniqueness: 0.985
+2026-01-21 13:56:48,643 - INFO - Novelty: 0.831
+2026-01-21 13:56:48,643 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:56:48,643 - INFO - Combined MMD: 0.087326
+2026-01-21 13:56:48,644 - INFO - Epoch 19 | D_loss: 2.675384 | G_loss: 0.868202 | Val: 0.087326
+2026-01-21 13:57:54,837 - INFO - 
+--- Class 0 ---
+2026-01-21 13:57:54,837 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:57:55,157 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:57:55,157 - INFO - Fake - Avg nodes: 50.1±28.7, Avg edges: 129.7±119.4
+2026-01-21 13:57:55,157 - INFO - MMD Degree 0: 0.076676
+2026-01-21 13:57:55,157 - INFO - MMD Clustering 0: 0.051254
+2026-01-21 13:57:55,157 - INFO - MMD Spectral 0: 0.132200
+2026-01-21 13:57:55,157 - INFO - MMD Combined 0: 0.083165
+2026-01-21 13:58:00,908 - INFO - Uniqueness: 0.891
+2026-01-21 13:58:00,908 - INFO - Novelty: 1.000
+2026-01-21 13:58:00,908 - INFO - 
+--- Class 1 ---
+2026-01-21 13:58:00,908 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:58:01,031 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:58:01,032 - INFO - Fake - Avg nodes: 23.9±11.1, Avg edges: 53.0±42.4
+2026-01-21 13:58:01,032 - INFO - MMD Degree 1: 0.070538
+2026-01-21 13:58:01,032 - INFO - MMD Clustering 1: 0.062986
+2026-01-21 13:58:01,032 - INFO - MMD Spectral 1: 0.061201
+2026-01-21 13:58:01,032 - INFO - MMD Combined 1: 0.064716
+2026-01-21 13:58:06,556 - INFO - Uniqueness: 0.938
+2026-01-21 13:58:06,556 - INFO - Novelty: 0.908
+2026-01-21 13:58:06,556 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:58:06,556 - INFO - Combined MMD: 0.097445
+2026-01-21 13:58:06,558 - INFO - Epoch 20 | D_loss: 2.922916 | G_loss: 0.642475 | Val: 0.097445
+2026-01-21 13:59:12,217 - INFO - 
+--- Class 0 ---
+2026-01-21 13:59:12,218 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 13:59:12,544 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 13:59:12,544 - INFO - Fake - Avg nodes: 45.8±27.0, Avg edges: 109.8±105.6
+2026-01-21 13:59:12,545 - INFO - MMD Degree 0: 0.067180
+2026-01-21 13:59:12,545 - INFO - MMD Clustering 0: 0.063096
+2026-01-21 13:59:12,545 - INFO - MMD Spectral 0: 0.141288
+2026-01-21 13:59:12,545 - INFO - MMD Combined 0: 0.087779
+2026-01-21 13:59:18,290 - INFO - Uniqueness: 0.931
+2026-01-21 13:59:18,290 - INFO - Novelty: 0.990
+2026-01-21 13:59:18,290 - INFO - 
+--- Class 1 ---
+2026-01-21 13:59:18,290 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 13:59:18,411 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 13:59:18,411 - INFO - Fake - Avg nodes: 23.1±11.0, Avg edges: 49.8±45.7
+2026-01-21 13:59:18,412 - INFO - MMD Degree 1: 0.069139
+2026-01-21 13:59:18,412 - INFO - MMD Clustering 1: 0.053110
+2026-01-21 13:59:18,412 - INFO - MMD Spectral 1: 0.051511
+2026-01-21 13:59:18,412 - INFO - MMD Combined 1: 0.057439
+2026-01-21 13:59:23,917 - INFO - Uniqueness: 0.985
+2026-01-21 13:59:23,917 - INFO - Novelty: 0.800
+2026-01-21 13:59:23,917 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 13:59:23,917 - INFO - Combined MMD: 0.078691
+2026-01-21 13:59:23,919 - INFO - Epoch 21 | D_loss: 3.277260 | G_loss: 0.341755 | Val: 0.078691
+2026-01-21 14:00:29,340 - INFO - 
+--- Class 0 ---
+2026-01-21 14:00:29,340 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 14:00:29,665 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 14:00:29,665 - INFO - Fake - Avg nodes: 49.2±22.5, Avg edges: 113.4±92.6
+2026-01-21 14:00:29,665 - INFO - MMD Degree 0: 0.063349
+2026-01-21 14:00:29,666 - INFO - MMD Clustering 0: 0.033827
+2026-01-21 14:00:29,666 - INFO - MMD Spectral 0: 0.138457
+2026-01-21 14:00:29,666 - INFO - MMD Combined 0: 0.074073
+2026-01-21 14:00:35,520 - INFO - Uniqueness: 0.980
+2026-01-21 14:00:35,520 - INFO - Novelty: 1.000
+2026-01-21 14:00:35,520 - INFO - 
+--- Class 1 ---
+2026-01-21 14:00:35,520 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 14:00:35,643 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 14:00:35,643 - INFO - Fake - Avg nodes: 25.0±9.9, Avg edges: 54.9±38.7
+2026-01-21 14:00:35,643 - INFO - MMD Degree 1: 0.068940
+2026-01-21 14:00:35,643 - INFO - MMD Clustering 1: 0.046249
+2026-01-21 14:00:35,644 - INFO - MMD Spectral 1: 0.063653
+2026-01-21 14:00:35,644 - INFO - MMD Combined 1: 0.058277
+2026-01-21 14:00:41,178 - INFO - Uniqueness: 0.923
+2026-01-21 14:00:41,178 - INFO - Novelty: 0.923
+2026-01-21 14:00:41,178 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 14:00:41,178 - INFO - Combined MMD: 0.081535
+2026-01-21 14:00:41,180 - INFO - Epoch 22 | D_loss: 3.801255 | G_loss: -0.343527 | Val: 0.081535
+2026-01-21 14:01:47,659 - INFO - 
+--- Class 0 ---
+2026-01-21 14:01:47,659 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 14:01:47,985 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 14:01:47,985 - INFO - Fake - Avg nodes: 50.7±26.4, Avg edges: 127.0±112.6
+2026-01-21 14:01:47,985 - INFO - MMD Degree 0: 0.065159
+2026-01-21 14:01:47,985 - INFO - MMD Clustering 0: 0.041244
+2026-01-21 14:01:47,985 - INFO - MMD Spectral 0: 0.134754
+2026-01-21 14:01:47,985 - INFO - MMD Combined 0: 0.076471
+2026-01-21 14:01:53,753 - INFO - Uniqueness: 0.941
+2026-01-21 14:01:53,753 - INFO - Novelty: 0.990
+2026-01-21 14:01:53,753 - INFO - 
+--- Class 1 ---
+2026-01-21 14:01:53,753 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 14:01:53,880 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 14:01:53,880 - INFO - Fake - Avg nodes: 25.3±14.0, Avg edges: 63.7±59.9
+2026-01-21 14:01:53,881 - INFO - MMD Degree 1: 0.075417
+2026-01-21 14:01:53,881 - INFO - MMD Clustering 1: 0.065909
+2026-01-21 14:01:53,881 - INFO - MMD Spectral 1: 0.047440
+2026-01-21 14:01:53,881 - INFO - MMD Combined 1: 0.063220
+2026-01-21 14:01:59,404 - INFO - Uniqueness: 0.892
+2026-01-21 14:01:59,404 - INFO - Novelty: 0.923
+2026-01-21 14:01:59,404 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 14:01:59,404 - INFO - Combined MMD: 0.083202
+2026-01-21 14:01:59,405 - INFO - Epoch 23 | D_loss: 4.925215 | G_loss: -1.087437 | Val: 0.083202
+2026-01-21 14:03:04,596 - INFO - 
+--- Class 0 ---
+2026-01-21 14:03:04,596 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 14:03:04,936 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 14:03:04,936 - INFO - Fake - Avg nodes: 50.5±28.0, Avg edges: 129.7±118.7
+2026-01-21 14:03:04,936 - INFO - MMD Degree 0: 0.067744
+2026-01-21 14:03:04,936 - INFO - MMD Clustering 0: 0.044129
+2026-01-21 14:03:04,936 - INFO - MMD Spectral 0: 0.119620
+2026-01-21 14:03:04,936 - INFO - MMD Combined 0: 0.073861
+2026-01-21 14:03:10,709 - INFO - Uniqueness: 0.931
+2026-01-21 14:03:10,709 - INFO - Novelty: 1.000
+2026-01-21 14:03:10,709 - INFO - 
+--- Class 1 ---
+2026-01-21 14:03:10,709 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 14:03:10,830 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 14:03:10,830 - INFO - Fake - Avg nodes: 22.8±10.7, Avg edges: 48.2±40.2
+2026-01-21 14:03:10,830 - INFO - MMD Degree 1: 0.071768
+2026-01-21 14:03:10,831 - INFO - MMD Clustering 1: 0.061642
+2026-01-21 14:03:10,831 - INFO - MMD Spectral 1: 0.051216
+2026-01-21 14:03:10,831 - INFO - MMD Combined 1: 0.061552
+2026-01-21 14:03:16,339 - INFO - Uniqueness: 0.877
+2026-01-21 14:03:16,339 - INFO - Novelty: 0.815
+2026-01-21 14:03:16,339 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 14:03:16,339 - INFO - Combined MMD: 0.081641
+2026-01-21 14:03:16,340 - INFO - Epoch 24 | D_loss: 5.407189 | G_loss: -1.819092 | Val: 0.081641
+2026-01-21 14:04:22,918 - INFO - 
+--- Class 0 ---
+2026-01-21 14:04:22,918 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 14:04:23,236 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 14:04:23,236 - INFO - Fake - Avg nodes: 48.0±27.0, Avg edges: 117.8±121.9
+2026-01-21 14:04:23,236 - INFO - MMD Degree 0: 0.068852
+2026-01-21 14:04:23,236 - INFO - MMD Clustering 0: 0.045969
+2026-01-21 14:04:23,236 - INFO - MMD Spectral 0: 0.157379
+2026-01-21 14:04:23,236 - INFO - MMD Combined 0: 0.086257
+2026-01-21 14:04:29,008 - INFO - Uniqueness: 0.931
+2026-01-21 14:04:29,008 - INFO - Novelty: 0.990
+2026-01-21 14:04:29,008 - INFO - 
+--- Class 1 ---
+2026-01-21 14:04:29,008 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 14:04:29,131 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 14:04:29,131 - INFO - Fake - Avg nodes: 24.6±10.2, Avg edges: 54.0±44.0
+2026-01-21 14:04:29,132 - INFO - MMD Degree 1: 0.068615
+2026-01-21 14:04:29,132 - INFO - MMD Clustering 1: 0.048791
+2026-01-21 14:04:29,132 - INFO - MMD Spectral 1: 0.049152
+2026-01-21 14:04:29,132 - INFO - MMD Combined 1: 0.054846
+2026-01-21 14:04:34,647 - INFO - Uniqueness: 0.969
+2026-01-21 14:04:34,647 - INFO - Novelty: 0.831
+2026-01-21 14:04:34,647 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 14:04:34,647 - INFO - Combined MMD: 0.077191
+2026-01-21 14:04:34,649 - INFO - Epoch 25 | D_loss: 4.994337 | G_loss: -2.558177 | Val: 0.077191
+2026-01-21 14:05:39,465 - INFO - 
+--- Class 0 ---
+2026-01-21 14:05:39,465 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 14:05:39,798 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 14:05:39,798 - INFO - Fake - Avg nodes: 46.8±27.7, Avg edges: 114.9±121.1
+2026-01-21 14:05:39,799 - INFO - MMD Degree 0: 0.067430
+2026-01-21 14:05:39,799 - INFO - MMD Clustering 0: 0.053314
+2026-01-21 14:05:39,799 - INFO - MMD Spectral 0: 0.147132
+2026-01-21 14:05:39,799 - INFO - MMD Combined 0: 0.085694
+2026-01-21 14:05:45,549 - INFO - Uniqueness: 0.941
+2026-01-21 14:05:45,550 - INFO - Novelty: 0.990
+2026-01-21 14:05:45,550 - INFO - 
+--- Class 1 ---
+2026-01-21 14:05:45,550 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 14:05:45,672 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 14:05:45,672 - INFO - Fake - Avg nodes: 24.4±9.1, Avg edges: 51.4±34.9
+2026-01-21 14:05:45,672 - INFO - MMD Degree 1: 0.069369
+2026-01-21 14:05:45,672 - INFO - MMD Clustering 1: 0.046182
+2026-01-21 14:05:45,672 - INFO - MMD Spectral 1: 0.041675
+2026-01-21 14:05:45,672 - INFO - MMD Combined 1: 0.051786
+2026-01-21 14:05:51,195 - INFO - Uniqueness: 0.954
+2026-01-21 14:05:51,195 - INFO - Novelty: 0.862
+2026-01-21 14:05:51,195 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 14:05:51,195 - INFO - Combined MMD: 0.085435
+2026-01-21 14:05:51,197 - INFO - Epoch 26 | D_loss: 4.695734 | G_loss: -3.183489 | Val: 0.085435
+2026-01-21 14:06:55,956 - INFO - 
+--- Class 0 ---
+2026-01-21 14:06:55,956 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 14:06:56,438 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 14:06:56,438 - INFO - Fake - Avg nodes: 41.7±23.8, Avg edges: 89.3±89.3
+2026-01-21 14:06:56,439 - INFO - MMD Degree 0: 0.070226
+2026-01-21 14:06:56,439 - INFO - MMD Clustering 0: 0.052644
+2026-01-21 14:06:56,439 - INFO - MMD Spectral 0: 0.159290
+2026-01-21 14:06:56,439 - INFO - MMD Combined 0: 0.089912
+2026-01-21 14:07:02,196 - INFO - Uniqueness: 0.931
+2026-01-21 14:07:02,196 - INFO - Novelty: 0.990
+2026-01-21 14:07:02,196 - INFO - 
+--- Class 1 ---
+2026-01-21 14:07:02,196 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 14:07:02,319 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 14:07:02,319 - INFO - Fake - Avg nodes: 23.0±10.7, Avg edges: 49.0±39.2
+2026-01-21 14:07:02,319 - INFO - MMD Degree 1: 0.074260
+2026-01-21 14:07:02,319 - INFO - MMD Clustering 1: 0.056323
+2026-01-21 14:07:02,319 - INFO - MMD Spectral 1: 0.056008
+2026-01-21 14:07:02,319 - INFO - MMD Combined 1: 0.061610
+2026-01-21 14:07:07,846 - INFO - Uniqueness: 0.923
+2026-01-21 14:07:07,846 - INFO - Novelty: 0.862
+2026-01-21 14:07:07,846 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 14:07:07,847 - INFO - Combined MMD: 0.084630
+2026-01-21 14:07:07,848 - INFO - Epoch 27 | D_loss: 4.624361 | G_loss: -3.421631 | Val: 0.084630
+2026-01-21 14:08:14,599 - INFO - 
+--- Class 0 ---
+2026-01-21 14:08:14,599 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 14:08:14,936 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 14:08:14,936 - INFO - Fake - Avg nodes: 48.6±27.6, Avg edges: 121.4±109.6
+2026-01-21 14:08:14,937 - INFO - MMD Degree 0: 0.069141
+2026-01-21 14:08:14,937 - INFO - MMD Clustering 0: 0.045531
+2026-01-21 14:08:14,937 - INFO - MMD Spectral 0: 0.161341
+2026-01-21 14:08:14,937 - INFO - MMD Combined 0: 0.087357
+2026-01-21 14:08:20,698 - INFO - Uniqueness: 0.931
+2026-01-21 14:08:20,698 - INFO - Novelty: 1.000
+2026-01-21 14:08:20,698 - INFO - 
+--- Class 1 ---
+2026-01-21 14:08:20,698 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 14:08:20,825 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 14:08:20,825 - INFO - Fake - Avg nodes: 26.2±9.9, Avg edges: 59.7±45.8
+2026-01-21 14:08:20,825 - INFO - MMD Degree 1: 0.069628
+2026-01-21 14:08:20,825 - INFO - MMD Clustering 1: 0.045005
+2026-01-21 14:08:20,825 - INFO - MMD Spectral 1: 0.065864
+2026-01-21 14:08:20,825 - INFO - MMD Combined 1: 0.058650
+2026-01-21 14:08:26,344 - INFO - Uniqueness: 0.985
+2026-01-21 14:08:26,344 - INFO - Novelty: 0.877
+2026-01-21 14:08:26,344 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 14:08:26,344 - INFO - Combined MMD: 0.077333
+2026-01-21 14:08:26,346 - INFO - Epoch 28 | D_loss: 4.516562 | G_loss: -3.356178 | Val: 0.077333
+2026-01-21 14:09:31,555 - INFO - 
+--- Class 0 ---
+2026-01-21 14:09:31,555 - INFO - Test graphs: 101, Generated graphs: 101
+2026-01-21 14:09:31,877 - INFO - Real - Avg nodes: 51.3±46.1, Avg edges: 96.0±83.2
+2026-01-21 14:09:31,877 - INFO - Fake - Avg nodes: 50.7±28.5, Avg edges: 131.6±125.8
+2026-01-21 14:09:31,878 - INFO - MMD Degree 0: 0.065964
+2026-01-21 14:09:31,878 - INFO - MMD Clustering 0: 0.046494
+2026-01-21 14:09:31,878 - INFO - MMD Spectral 0: 0.150743
+2026-01-21 14:09:31,878 - INFO - MMD Combined 0: 0.083610
+2026-01-21 14:09:37,629 - INFO - Uniqueness: 0.950
+2026-01-21 14:09:37,629 - INFO - Novelty: 1.000
+2026-01-21 14:09:37,629 - INFO - 
+--- Class 1 ---
+2026-01-21 14:09:37,629 - INFO - Test graphs: 65, Generated graphs: 65
+2026-01-21 14:09:37,750 - INFO - Real - Avg nodes: 22.1±15.4, Avg edges: 40.2±29.3
+2026-01-21 14:09:37,750 - INFO - Fake - Avg nodes: 23.0±9.6, Avg edges: 47.2±37.0
+2026-01-21 14:09:37,751 - INFO - MMD Degree 1: 0.070478
+2026-01-21 14:09:37,751 - INFO - MMD Clustering 1: 0.049247
+2026-01-21 14:09:37,751 - INFO - MMD Spectral 1: 0.061010
+2026-01-21 14:09:37,751 - INFO - MMD Combined 1: 0.059145
+2026-01-21 14:09:43,253 - INFO - Uniqueness: 0.938
+2026-01-21 14:09:43,253 - INFO - Novelty: 0.846
+2026-01-21 14:09:43,253 - INFO - 
+--- FINAL RESULTS ---
+2026-01-21 14:09:43,253 - INFO - Combined MMD: 0.088635
+2026-01-21 14:09:43,254 - INFO - Epoch 29 | D_loss: 4.312959 | G_loss: -3.258505 | Val: 0.088635
+2026-01-21 14:09:43,255 - INFO - Early stopping at epoch 29
+2026-01-21 14:09:43,255 - INFO - 
+==================================================
+2026-01-21 14:09:43,255 - INFO - >>> PHASE 2: Evolutionary Edge Refinement <<<
+2026-01-21 14:09:43,255 - INFO - ==================================================
+2026-01-21 14:09:44,494 - INFO - Saving Real (Test) graph statistics and structures...
+2026-01-21 14:09:44,605 - INFO - Saved 168 graph structures to ./results/PROTEINS/20260121_133218_Seed42/real_graphs.json
+2026-01-21 14:09:44,837 - INFO - Saved detailed statistics to ./results/PROTEINS/20260121_133218_Seed42/real_stats.json
+2026-01-21 14:09:44,837 - INFO - Refining 168 graphs...
+2026-01-21 14:14:00,711 - INFO - Saving Raw and Refined graph statistics and structures...
+2026-01-21 14:14:00,752 - INFO - Saved 168 graph structures to ./results/PROTEINS/20260121_133218_Seed42/raw_graphs.json
+2026-01-21 14:14:00,977 - INFO - Saved detailed statistics to ./results/PROTEINS/20260121_133218_Seed42/raw_stats.json
+2026-01-21 14:14:01,013 - INFO - Saved 168 graph structures to ./results/PROTEINS/20260121_133218_Seed42/refined_graphs.json
+2026-01-21 14:14:01,224 - INFO - Saved detailed statistics to ./results/PROTEINS/20260121_133218_Seed42/refined_stats.json
+2026-01-21 14:14:01,224 - INFO - 
+>>> Evaluating Refined Graphs <<<
+2026-01-21 14:14:01,234 - INFO - 
+--- REFINED EVALUATION RESULTS ---
+2026-01-21 14:14:01,671 - INFO - Overall MMD: 0.037373 (Deg: 0.0675, Clus: 0.0341, Spec: 0.0117)
+2026-01-21 14:14:07,985 - INFO - Class 0: Nodes 47.2 | MMD 0.0482 | Uni 0.76 | Nov 0.47
+2026-01-21 14:14:08,135 - INFO - Class 1: Nodes 24.0 | MMD 0.0793 | Uni 0.64 | Nov 0.31
+2026-01-21 14:14:08,135 - INFO - Detailed results saved to: ./results/PROTEINS/20260121_133218_Seed42/PROTEINS_refined_results.txt
+2026-01-21 14:14:08,135 - INFO - 
+>>> Evaluating Raw WGAN Graphs (Pre-Refinement) <<<
+2026-01-21 14:14:08,144 - INFO - 
+--- RAW EVALUATION RESULTS ---
+2026-01-21 14:14:08,572 - INFO - Overall MMD: 0.053001 (Deg: 0.0592, Clus: 0.0387, Spec: 0.0659)
+2026-01-21 14:14:14,826 - INFO - Class 0: Nodes 47.2 | MMD 0.0892 | Uni 0.91 | Nov 0.99
+2026-01-21 14:14:14,980 - INFO - Class 1: Nodes 24.0 | MMD 0.0730 | Uni 0.94 | Nov 0.88
+2026-01-21 14:14:14,980 - INFO - Detailed results saved to: ./results/PROTEINS/20260121_133218_Seed42/PROTEINS_raw_results.txt
+2026-01-21 14:14:15,278 - INFO - Generating summary report...
+2026-01-21 14:14:15,278 - INFO - Summary report saved to: ./results/PROTEINS/20260121_133218_Seed42/summary_report.txt
+2026-01-21 14:14:15,278 - INFO - Experiment complete!

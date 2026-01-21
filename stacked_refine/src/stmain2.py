@@ -14,6 +14,7 @@ import torch.nn.functional as F
 from torch_geometric.datasets import TUDataset
 from torch_geometric.loader import DataLoader
 from torch_geometric.data import Data
+from torch_geometric.utils import degree
 
 from config import Config
 from models import Generator, Discriminator
@@ -125,6 +126,23 @@ def compute_and_save_detailed_stats(graphs, config, filename, logger):
             "count": len(class_graphs)
         }
 
+        # Determine Max Degree for Binning Metadata
+        # We calculate the max degree in this specific subset of graphs
+        current_max_deg = 0
+        for g in class_graphs:
+             if g.edge_index.numel() > 0:
+                 d = degree(g.edge_index[0], g.x.size(0))
+                 m = d.max().item()
+                 if m > current_max_deg:
+                     current_max_deg = m
+        
+        # Calculate bin widths
+        deg_bin_width = current_max_deg / config.num_bins if current_max_deg > 0 else 0.0
+        # Clustering is always [0, 1]
+        clus_bin_width = 1.0 / config.num_bins
+        # Spectral (Normalized Laplacian) is always [0, 2]
+        spec_bin_width = 2.0 / config.num_bins
+
         # 2. Advanced Stats (Degree, Clustering, Spectral)
         # compute_graph_statistics returns dictionaries of numpy arrays [N_graphs, Num_Bins]
         raw_stats = compute_graph_statistics(class_graphs, num_bins=config.num_bins)
@@ -137,6 +155,11 @@ def compute_and_save_detailed_stats(graphs, config, filename, logger):
 
         output_stats[label] = {
             "basic": basic_stats,
+            "distribution_params": {
+                "degree": { "max_val": int(current_max_deg), "bin_width": deg_bin_width },
+                "clustering": { "max_val": 1.0, "bin_width": clus_bin_width },
+                "spectral": { "max_val": 2.0, "bin_width": spec_bin_width }
+            },
             "distributions": {
                 "degree": avg_degree_dist,
                 "clustering": avg_clustering_dist,

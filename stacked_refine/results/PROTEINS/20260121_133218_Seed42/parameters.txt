@@ -1,0 +1,62 @@
+{
+    "seed": 42,
+    "dataset_name": "PROTEINS",
+    "batch_size": 64,
+    "train_split": 0.7,
+    "val_split": 0.15,
+    "noise_dim": 16,
+    "class_embed_dim": 8,
+    "hidden_dim_gen": 32,
+    "hidden_dim_dis": 32,
+    "n_critic": 5,
+    "lambda_gp": 10.0,
+    "epochs": 50,
+    "patience": 12,
+    "lr_gen": 0.0002,
+    "lr_dis": 0.0005,
+    "betas_gen": [
+        0.5,
+        0.9
+    ],
+    "betas_dis": [
+        0.5,
+        0.9
+    ],
+    "start_temperature": 2.0,
+    "end_temperature": 0.5,
+    "num_samples_per_label": 150,
+    "samples_per_batch": 50,
+    "num_bins": 10,
+    "vis_num_samples": 6,
+    "use_refinement": true,
+    "refinement_log_interval": 1,
+    "refiner_pop_size": 400,
+    "refiner_gens": 300,
+    "lambda_refine": 1.0,
+    "crossover_probability": 0.5,
+    "mutation_probability": 0.8,
+    "refinement_op_weights": [
+        0.5,
+        1.0,
+        0.5,
+        0.5,
+        1.0,
+        0.5,
+        1.0,
+        1.0,
+        1.0
+    ],
+    "gammas": {
+        "degree": 1.0,
+        "clustering": 1.0,
+        "spectral": 0.1
+    },
+    "weights": {
+        "degree": 0.3,
+        "clustering": 0.4,
+        "spectral": 0.3
+    },
+    "save_dir": "./saved_models/PROTEINS/20260121_133218_Seed42",
+    "results_dir": "./results/PROTEINS/20260121_133218_Seed42",
+    "data_dir": "./data/"
+}
