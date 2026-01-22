@@ -1,0 +1,72 @@
+REFINED Graph Generation Evaluation Results
+==================================================
+
+  Overall MMD Degree: 0.070299
+  Overall MMD Clustering: 0.035547
+  Overall MMD Spectral: 0.021977
+  Overall MMD Combined: 0.041902
+Class 0:
+  Sample size: 10 real, 10 generated
+  MMD Degree: 0.213450
+  MMD Clustering: 0.200388
+  MMD Spectral: 0.033654
+  MMD Combined: 0.154286
+  Uniqueness: 1.000000
+  Novelty: 0.600000
+  Avg Nodes: 31.6 -> 38.4
+  Avg Edges: 63.3 -> 66.6
+
+Class 1:
+  Sample size: 17 real, 17 generated
+  MMD Degree: 0.175184
+  MMD Clustering: 0.130503
+  MMD Spectral: 0.098640
+  MMD Combined: 0.134348
+  Uniqueness: 0.764706
+  Novelty: 0.294118
+  Avg Nodes: 32.1 -> 29.1
+  Avg Edges: 62.1 -> 56.7
+
+Class 2:
+  Sample size: 15 real, 15 generated
+  MMD Degree: 0.164633
+  MMD Clustering: 0.135183
+  MMD Spectral: 0.034077
+  MMD Combined: 0.113686
+  Uniqueness: 0.800000
+  Novelty: 0.533333
+  Avg Nodes: 30.1 -> 30.6
+  Avg Edges: 60.3 -> 56.0
+
+Class 3:
+  Sample size: 12 real, 12 generated
+  MMD Degree: 0.219283
+  MMD Clustering: 0.168174
+  MMD Spectral: 0.021090
+  MMD Combined: 0.139382
+  Uniqueness: 0.833333
+  Novelty: 0.666667
+  Avg Nodes: 37.4 -> 38.3
+  Avg Edges: 73.5 -> 74.9
+
+Class 4:
+  Sample size: 19 real, 19 generated
+  MMD Degree: 0.152346
+  MMD Clustering: 0.116204
+  MMD Spectral: 0.048333
+  MMD Combined: 0.106685
+  Uniqueness: 0.684211
+  Novelty: 0.631579
+  Avg Nodes: 32.1 -> 28.6
+  Avg Edges: 60.4 -> 58.6
+
+Class 5:
+  Sample size: 17 real, 17 generated
+  MMD Degree: 0.165084
+  MMD Clustering: 0.122157
+  MMD Spectral: 0.062873
+  MMD Combined: 0.117250
+  Uniqueness: 0.941176
+  Novelty: 0.588235
+  Avg Nodes: 38.8 -> 26.6
+  Avg Edges: 77.3 -> 52.5

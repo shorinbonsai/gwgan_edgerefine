@@ -1,0 +1,16 @@
+Experiment Summary Report
+=========================
+Date: 20260122_080820
+Dataset: MUTAG
+Seed: 42
+
+Performance Metrics (MMD - Lower is Better)
+-------------------------------------------
+Raw WGAN MMD:      0.503703
+Refined Graph MMD: 0.069500
+Net Improvement:   0.434202
+Result: Refinement IMPROVED the distribution matching.
+
+Configuration Details
+Refiner Generations: 300
+Refiner Pop Size:    400

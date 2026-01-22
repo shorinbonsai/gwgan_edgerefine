@@ -7,7 +7,7 @@ from typing import List, Dict
 @dataclass
 class Config:
     seed:int = 42
-    dataset_name: str = 'PROTEINS' #ENZYMES, MUTAG
+    dataset_name: str =  'ENZYMES' #PROTEINS, #ENZYMES, MUTAG
     batch_size: int = 64
     train_split: float = 0.7
     val_split: float = 0.15
@@ -44,7 +44,7 @@ class Config:
     refinement_log_interval: int = 1  
     
     # GA Parameters
-    refiner_pop_size: int = 400
+    refiner_pop_size: int = 500
     # refiner_gene_len: int = 60
     refiner_gens: int = 300
     lambda_refine: float = 1.0  # Weight for the refinement loss

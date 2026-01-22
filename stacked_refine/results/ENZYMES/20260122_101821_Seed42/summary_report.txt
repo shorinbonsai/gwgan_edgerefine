@@ -1,0 +1,16 @@
+Experiment Summary Report
+=========================
+Date: 20260122_101821
+Dataset: ENZYMES
+Seed: 42
+
+Performance Metrics (MMD - Lower is Better)
+-------------------------------------------
+Raw WGAN MMD:      0.039407
+Refined Graph MMD: 0.041902
+Net Improvement:   -0.002495
+Result: Refinement DID NOT improve the distribution matching.
+
+Configuration Details
+Refiner Generations: 300
+Refiner Pop Size:    500

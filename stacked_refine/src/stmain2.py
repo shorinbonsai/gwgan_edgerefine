@@ -379,7 +379,7 @@ def main():
                 # A weight of 0.1 means being off by 10 edges costs 1.0 (equivalent to a bad MMD score)
                 edge_pen_weight = 0.01
 
-                fixed_gammas = (0.01, 0.01, 0.5)
+                fixed_gammas = (0.01, 0.01, config.gammas['spectral'])  # Lowered gammas for refinement stability
 
                 refiner.set_target_statistics(
                     stats['degree'][0], stats['degree'][1], stats['degree'][2],
@@ -394,7 +394,7 @@ def main():
                 # logger.info(f"Avg_edges: {avg_edges}")
                 
                 # Run Evolution
-                refiner.evolve(config.refiner_gens, 42 + i)
+                refiner.evolve(config.refiner_gens, config.seed + i)
 
                 # GA PROCESS LOGGING
                 # Save logs for the first graph of each batch to monitor evolution without spamming files

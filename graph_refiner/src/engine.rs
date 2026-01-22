@@ -323,7 +323,7 @@ impl GeneticOptimizer {
         if self.base_graph.is_none() { return f64::INFINITY; }
         let base = self.base_graph.as_ref().unwrap();
 
-        let tournament_size = 5; 
+        let tournament_size = 7; 
         let mut best_overall_error = f64::INFINITY; 
         let op_weights = self.op_weights.clone();
         let crossover_prob = self.crossover_prob;
