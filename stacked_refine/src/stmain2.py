@@ -328,7 +328,7 @@ def main():
         
         # Unpack weights/gammas
         w_tup = (config.weights['degree'], config.weights['clustering'], config.weights['spectral'])
-        g_tup = (config.gammas['degree'], config.gammas['clustering'], config.gammas['spectral'])
+        # g_tup = (config.gammas['degree'], config.gammas['clustering'], config.gammas['spectral'])
 
         logger.info(f"Refining {len(real_test_graphs)} graphs...")
         
