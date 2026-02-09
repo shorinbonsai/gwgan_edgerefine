@@ -442,6 +442,28 @@ def main():
         raw_save_path = os.path.join(config.results_dir, f"{config.dataset_name}_raw_results.txt")
         raw_score = evaluate_graph_sets(raw_graphs_list, real_test_graphs, train_loader, labels, config, logger, phase="RAW", save_path=raw_save_path) 
 
+        # ==============================================================================
+        # MODIFICATION: Run the Original  Evaluate Method
+        # This reproduces the logic from main.py to demonstrate the scoring discrepancy.
+        # ==============================================================================
+        logger.info("\n" + "=" * 50)
+        logger.info(">>> COMPARISON: Running Original Evaluate Method <<<")
+        logger.info("=" * 50)
+        
+        evaluate(
+            generator, 
+            discriminator, 
+            labels, 
+            test_loader, 
+            train_loader, 
+            dataset_stats, 
+            config, 
+            device, 
+            logger, 
+            file=True  # This will save to {dataset}_results.txt
+        )
+
+
         # Visualize
         visualize_custom_list(refined_graphs_list[:6], "Refined Samples", os.path.join(config.results_dir, "refined_samples.png"))
         visualize_custom_list(raw_graphs_list[:6], "Raw Samples", os.path.join(config.results_dir, "raw_samples.png"))

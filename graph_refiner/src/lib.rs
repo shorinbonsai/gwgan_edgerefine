@@ -44,7 +44,7 @@ impl GraphRefiner {
     }
 
     /// Sets the probability weights for the 9 graph operations.
-    /// Order: [Toggle, LocalToggle, Hop, Add, Delete, Swap, LocalAdd, LocalDelete, Null]
+    /// Order: [Toggle, Hop, Add, Delete, Swap, LocalToggle, LocalAdd, LocalDelete, Null]
     pub fn set_operation_weights(&mut self, weights: Vec<f64>) {
         self.optimizer.set_op_weights(weights);
     }

@@ -1,5 +1,3 @@
-/// A lightweight graph representation optimized for the specific
-/// mutation operations defined in the paper.
 #[derive(Clone)]
 pub struct GraphState {
     pub num_nodes: usize,

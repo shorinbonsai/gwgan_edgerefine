@@ -165,6 +165,9 @@ def evaluate(generator: nn.Module, discriminator: nn.Module, labels: Iterable[in
     real_graphs_by_class = {int(l): [] for l in labels}
     fake_graphs_by_class = {int(l): [] for l in labels}
 
+    all_real_graphs = []
+    all_fake_graphs = []
+
     with torch.no_grad():
         # Collect real graphs from eval_loader and generate fake ones (per-batch)
         for batch in eval_loader:
@@ -174,6 +177,9 @@ def evaluate(generator: nn.Module, discriminator: nn.Module, labels: Iterable[in
             # Generate same number of fake graphs with matching labels from the real batch
             fake_batch = generator(batch.y.size(0), dataset_stats, batch.y.to(device))
             fake_graphs = extract_individual_graphs(fake_batch)
+
+            all_real_graphs.extend(real_graphs)
+            all_fake_graphs.extend(fake_graphs)
 
             for g in real_graphs:
                 if g.y is not None:
@@ -187,9 +193,10 @@ def evaluate(generator: nn.Module, discriminator: nn.Module, labels: Iterable[in
                     if label in fake_graphs_by_class:
                         fake_graphs_by_class[label].append(g)
 
-    
-    real_stats = compute_graph_statistics(real_graphs, num_bins=config.num_bins)
-    fake_stats = compute_graph_statistics(fake_graphs, num_bins=config.num_bins)
+    real_stats = compute_graph_statistics(all_real_graphs, num_bins=config.num_bins)
+    fake_stats = compute_graph_statistics(all_fake_graphs, num_bins=config.num_bins)    
+    # real_stats = compute_graph_statistics(real_graphs, num_bins=config.num_bins)
+    # fake_stats = compute_graph_statistics(fake_graphs, num_bins=config.num_bins)
 
     mmd_overall_degree = compute_mmd(real_stats['degrees'], fake_stats['degrees'], kernel='rbf', gamma=config.gammas['degree'])
     mmd_overall_clustering = compute_mmd(real_stats['clustering'], fake_stats['clustering'], kernel='rbf', gamma=config.gammas['clustering'])
