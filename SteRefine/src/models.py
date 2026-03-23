@@ -36,7 +36,11 @@ class EdgePredictor(nn.Module):
         h = F.relu(self.node_transform(node_features))
 
         if n < 2:
-            return torch.empty((0, self.num_edge_types), device=device), torch.empty((2, 0), dtype=torch.long, device=device)
+            return (
+                torch.empty((0, self.num_edge_types), device=device),
+                torch.empty((2, 0), dtype=torch.long, device=device),
+                torch.zeros((n, n), device=device)
+            )
 
         idx_i, idx_j = [], []
         for i in range(n - 1):
@@ -49,7 +53,13 @@ class EdgePredictor(nn.Module):
         logits = self.edge_mlp(pair_feats)
         probs = torch.sigmoid(logits / max(1e-6, temperature))
         pair_index = torch.stack([idx_i, idx_j], dim=0)
-        return probs, pair_index
+
+        # Build soft_adj — identical scatter logic to DistanceEdgePredictor
+        soft_adj = torch.zeros((n, n), device=device)
+        soft_adj[pair_index[0], pair_index[1]] = probs.squeeze(1)
+        soft_adj[pair_index[1], pair_index[0]] = probs.squeeze(1)
+
+        return probs, pair_index, soft_adj
 
 
 # --------------------------
@@ -215,9 +225,6 @@ class Generator(nn.Module):
         refiner.evolve(self.refiner_gens, graph_seed)
         return refiner.get_best_graph()
 
-    # ------------------------------------------------------------------
-    # Edge construction helpers
-    # ------------------------------------------------------------------
     def _build_edge_weight_via_ste(
         self,
         refined_edges: list,
@@ -252,51 +259,6 @@ class Generator(nn.Module):
             torch.stack([dst, src], dim=0)
         ], dim=1)
         edge_weight = torch.cat([w, w])
-
-        return edge_index, edge_weight
-
-    def _build_topk_edge_weight(
-        self,
-        probs: torch.Tensor,
-        pair_index: torch.Tensor,
-        soft_adj: torch.Tensor,
-        density: float,
-        node_offset: int,
-        device: torch.device
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        Top-k selection without GA.  Edge weights come from soft_adj
-        so the discriminator interface stays consistent.
-        """
-        m_pairs = pair_index.size(1) if pair_index.numel() > 0 else 0
-        if m_pairs == 0:
-            return (
-                torch.empty((2, 0), dtype=torch.long, device=device),
-                torch.empty(0, device=device)
-            )
-
-        topk = int(round(density * m_pairs))
-        if topk == 0:
-            return (
-                torch.empty((2, 0), dtype=torch.long, device=device),
-                torch.empty(0, device=device)
-            )
-
-        _, idx_topk = torch.topk(probs.view(-1), k=topk, largest=True)
-        sel_pairs = pair_index[:, idx_topk]
-
-        u_local = sel_pairs[0]
-        v_local = sel_pairs[1]
-        weights = soft_adj[u_local, v_local]  # vectorized, differentiable
-
-        u = u_local + node_offset
-        v = v_local + node_offset
-
-        edge_index = torch.cat([
-            torch.stack([u, v], dim=0),
-            torch.stack([v, u], dim=0)
-        ], dim=1)
-        edge_weight = torch.cat([weights, weights])
 
         return edge_index, edge_weight
 
@@ -378,10 +340,19 @@ class Generator(nn.Module):
 
             # --- PATH B: Top-k only (no GA) ---
             else:
-                edges_tensor, weights_tensor = self._build_topk_edge_weight(
-                    edge_probs, pair_idx, soft_adj, density,
-                    node_offset, device
-                )
+                edges_tensor = torch.empty((2, 0), dtype=torch.long, device=device)
+                weights_tensor = torch.empty(0, device=device)
+                topk = int(round(density * m_pairs))
+                if m_pairs > 0 and topk > 0:
+                    _, idx_topk = torch.topk(edge_probs.view(-1), k=topk, largest=True)
+                    sel_pairs = pair_idx[:, idx_topk]
+                    u = sel_pairs[0] + node_offset
+                    v = sel_pairs[1] + node_offset
+                    weights_tensor = torch.cat([soft_adj[sel_pairs[0], sel_pairs[1]]] * 2)
+                    edges_tensor = torch.cat([
+                        torch.stack([u, v], dim=0),
+                        torch.stack([v, u], dim=0)
+                    ], dim=1)
 
             all_x.append(x)
             all_edges.append(edges_tensor)
