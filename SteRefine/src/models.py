@@ -54,22 +54,22 @@ class EdgePredictor(nn.Module):
         probs = torch.sigmoid(logits / max(1e-6, temperature))
         pair_index = torch.stack([idx_i, idx_j], dim=0)
 
-        # Build soft_adj — identical scatter logic to DistanceEdgePredictor
-        soft_adj = torch.zeros((n, n), device=device)
-        soft_adj[pair_index[0], pair_index[1]] = probs.squeeze(1)
-        soft_adj[pair_index[1], pair_index[0]] = probs.squeeze(1)
+        # Build prob_adj — identical scatter logic to DistanceEdgePredictor
+        prob_adj = torch.zeros((n, n), device=device)
+        prob_adj[pair_index[0], pair_index[1]] = probs.squeeze(1)
+        prob_adj[pair_index[1], pair_index[0]] = probs.squeeze(1)
 
-        return probs, pair_index, soft_adj
+        return probs, pair_index, prob_adj
 
 
 # --------------------------
-# Distance Edge Predictor (Updated with Soft Adjacency)
+# Distance Edge Predictor (Updated with Probabilistic Adjacency)
 # --------------------------
 class DistanceEdgePredictor(nn.Module):
     """Predicts edges based on learned distance in latent space.
 
-    Returns a soft adjacency matrix alongside the pair-based format.
-    The soft adjacency matrix retains gradients back to node_encoder and
+    Returns a Probabilistic adjacency matrix alongside the pair-based format.
+    The probabilistic adjacency matrix retains gradients back to node_encoder and
     threshold, enabling the STE gradient path from the discriminator
     through edge weights.
     """
@@ -87,7 +87,7 @@ class DistanceEdgePredictor(nn.Module):
         Returns:
             probs:      (M, 1) edge probabilities for each upper-triangle pair
             pair_index: (2, M) [i, j] indices for each pair
-            soft_adj:   (N, N) symmetric soft adjacency matrix, retains gradients
+            prob_adj:   (N, N) symmetric probabilistic adjacency matrix, retains gradients
         """
         device = node_features.device
         n = node_features.size(0)
@@ -123,13 +123,13 @@ class DistanceEdgePredictor(nn.Module):
             torch.tensor(idx_j, device=device)
         ], dim=0)
 
-        # Build soft_adj by scattering the computed probs into an N×N matrix.
+        # Build prob_adj by scattering the computed probs into an N×N matrix.
         # The diagonal stays zero from initialization (loop never computes i==j).
-        soft_adj = torch.zeros((n, n), device=device)
-        soft_adj[pair_index[0], pair_index[1]] = probs.squeeze(1)
-        soft_adj[pair_index[1], pair_index[0]] = probs.squeeze(1)  # symmetric
+        prob_adj = torch.zeros((n, n), device=device)
+        prob_adj[pair_index[0], pair_index[1]] = probs.squeeze(1)
+        prob_adj[pair_index[1], pair_index[0]] = probs.squeeze(1)  # symmetric
 
-        return probs, pair_index, soft_adj
+        return probs, pair_index, prob_adj
 
 
 # --------------------------
@@ -152,13 +152,13 @@ class Generator(nn.Module):
         # GA Refinement Attributes
         # Populated by the main script before training begins.
         # When use_refinement is False the generator behaves like the original:
-        # top-k edges become the output with edge_weight from soft_adj.
+        # top-k edges become the output with edge_weight from prob_adj.
         # ------------------------------------------------------------------
         self.use_refinement: bool = False
         self.target_distributions: Optional[Dict] = None
         self.class_avg_edges: Optional[Dict[int, float]] = None
 
-        # GA hyperparameters (training-time defaults — smaller than post-hoc)
+        # GA hyperparameters
         self.refiner_pop_size: int = getattr(config, 'training_refiner_pop', 50)
         self.refiner_gens: int = getattr(config, 'training_refiner_gens', 20)
         self.refiner_seed: int = getattr(config, 'seed', 42)
@@ -193,7 +193,7 @@ class Generator(nn.Module):
     # ------------------------------------------------------------------
     # GA helpers
     # ------------------------------------------------------------------
-    def _refine_single_graph(
+    def refine_single_graph(
         self,
         edges_list: list,
         num_nodes: int,
@@ -225,17 +225,17 @@ class Generator(nn.Module):
         refiner.evolve(self.refiner_gens, graph_seed)
         return refiner.get_best_graph()
 
-    def _build_edge_weight_via_ste(
+    def build_edge_weight_via_ste(
         self,
         refined_edges: list,
-        soft_adj: torch.Tensor,
+        prob_adj: torch.Tensor,
         node_offset: int,
         device: torch.device
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        STE: edge_index from GA, edge_weight from soft_adj lookup.
+        STE: edge_index from GA, edge_weight from prob_adj lookup.
 
-        For each (u,v) the GA kept or added, soft_adj[u,v] provides a
+        For each (u,v) the GA kept or added, prob_adj[u,v] provides a
         differentiable weight that carries gradients back to the edge predictor.
         """
         if len(refined_edges) == 0:
@@ -246,7 +246,7 @@ class Generator(nn.Module):
 
         us, vs, weights = [], [], []
         for (u, v) in refined_edges:
-            weights.append(soft_adj[u, v])
+            weights.append(prob_adj[u, v])
             us.append(u + node_offset)
             vs.append(v + node_offset)
 
@@ -294,8 +294,8 @@ class Generator(nn.Module):
             class_expand = class_embeds[i].unsqueeze(0).repeat(num_nodes, 1)
             x = self.node_generator(torch.cat([z, class_expand], dim=1))
 
-            # Edge predictor — returns soft_adj as 3rd output
-            edge_probs, pair_idx, soft_adj = self.edge_predictor(x, temperature)
+            # Edge predictor — returns prob_adj as 3rd output
+            edge_probs, pair_idx, prob_adj = self.edge_predictor(x, temperature)
             m_pairs = pair_idx.size(1) if pair_idx.numel() > 0 else 0
 
             # Density from dataset statistics
@@ -331,11 +331,11 @@ class Generator(nn.Module):
                     + self._call_counter * 100000
                     + i
                 )
-                refined_edges = self._refine_single_graph(
+                refined_edges = self.refine_single_graph(
                     initial_edges, num_nodes, label, graph_seed
                 )
-                edges_tensor, weights_tensor = self._build_edge_weight_via_ste(
-                    refined_edges, soft_adj, node_offset, device
+                edges_tensor, weights_tensor = self.build_edge_weight_via_ste(
+                    refined_edges, prob_adj, node_offset, device
                 )
 
             # --- PATH B: Top-k only (no GA) ---
@@ -348,7 +348,7 @@ class Generator(nn.Module):
                     sel_pairs = pair_idx[:, idx_topk]
                     u = sel_pairs[0] + node_offset
                     v = sel_pairs[1] + node_offset
-                    weights_tensor = torch.cat([soft_adj[sel_pairs[0], sel_pairs[1]]] * 2)
+                    weights_tensor = torch.cat([prob_adj[sel_pairs[0], sel_pairs[1]]] * 2)
                     edges_tensor = torch.cat([
                         torch.stack([u, v], dim=0),
                         torch.stack([v, u], dim=0)
@@ -412,7 +412,6 @@ class Discriminator(nn.Module):
         x = F.leaky_relu(
             self.conv1(data.x, data.edge_index, edge_weight=ew), 0.2
         )
-        # Uncomment when ready:
         # x = F.leaky_relu(
         #     self.conv2(x, data.edge_index, edge_weight=ew), 0.2
         # )

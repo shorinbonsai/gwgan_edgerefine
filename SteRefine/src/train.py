@@ -99,7 +99,7 @@ def train_epoch(generator: nn.Module, discriminator: nn.Module, loader: DataLoad
         # Train Generator
         opt_g.zero_grad()
         # This forward call may also run the GA. edge_weight is NOT detached,
-        # so discriminator loss gradients flow through edge_weight -> soft_adj
+        # so discriminator loss gradients flow through edge_weight -> prob_adj
         # -> edge predictor parameters (the STE path).
         fake_data = generator(batch_size, dataset_stats, real_labels, temperature=temperature)
         d_fake = discriminator(fake_data, real_labels)

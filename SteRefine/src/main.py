@@ -293,9 +293,7 @@ def main():
         logger.info(f"Loaded best checkpoint from {save_path} (epoch {checkpoint.get('epoch', '?')})")
 
     # ------------------------------------------------------------------
-    # FINAL EVALUATION (with GA if it was used during training)
-    # The pipeline is evaluated as it was trained: if the GA was active
-    # during training, it stays active during evaluation.
+    # FINAL EVALUATION 
     # ------------------------------------------------------------------
     logger.info("\n" + "=" * 50)
     if config.use_refinement:
