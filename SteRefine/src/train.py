@@ -135,9 +135,16 @@ def train(generator: nn.Module, discriminator: nn.Module, train_loader: DataLoad
                 if epoch == 1:
                     logger.info(f"Epoch {epoch}: GA refinement OFF (warmup)")
             else:
-                generator.use_refinement = True
-                if epoch == config.refinement_warmup_epochs + 1:
+                epochs_since_warmup = epoch - config.refinement_warmup_epochs
+                ga_active = (epochs_since_warmup - 1) % config.refinement_interval == 0
+                generator.use_refinement = ga_active
+                if epochs_since_warmup == 1:
+                    logger.info(f"Epoch {epoch}: GA refinement starting "
+                                f"(interval={config.refinement_interval})")
+                elif ga_active:
                     logger.info(f"Epoch {epoch}: GA refinement ON")
+                else:
+                    logger.info(f"Epoch {epoch}: GA refinement OFF (interval)")
 
         d_loss, g_loss = train_epoch(generator, discriminator, train_loader,
                                      opt_g, opt_d, config, dataset_stats, device, epoch)

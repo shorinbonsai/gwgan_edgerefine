@@ -44,11 +44,13 @@ class Config:
 
     # Number of warmup epochs to train the Generator without GA refinement.
     refinement_warmup_epochs: int = 3
+    # Run GA every N epochs after warmup.
+    refinement_interval: int = 1 
 
     # Training-time GA parameters (kept lighter than a post-hoc pass
     # since the GA runs inside every generator forward call)
-    training_refiner_pop: int = 50
-    training_refiner_gens: int = 40
+    training_refiner_pop: int = 100
+    training_refiner_gens: int = 50
 
     # GA operator and reproduction settings
     crossover_probability: float = 0.5

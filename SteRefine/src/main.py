@@ -154,16 +154,22 @@ def main():
     parser.add_argument("--seed", type=int, default=None, help="Override random seed")
     parser.add_argument("--dataset", type=str, default=None, help="Override dataset name")
     parser.add_argument("--no-refine", action="store_true", help="Disable GA refinement entirely")
+    parser.add_argument("--refine-interval", type=int, default=None, help="Override GA refinement interval (epochs between GA runs)")
+    parser.add_argument("--data-dir", type=str, default=None, help="Override data directory")
     args = parser.parse_args()
 
     config = Config()
 
     if args.seed is not None:
         config.seed = args.seed
+    if args.data_dir is not None:
+        config.data_dir = args.data_dir
     if args.dataset is not None:
         config.dataset_name = args.dataset
     if args.no_refine:
         config.use_refinement = False
+    if args.refine_interval is not None:
+        config.refinement_interval = args.refine_interval
     
     # 2. CREATE DYNAMIC DIRECTORY STRUCTURE
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -362,6 +368,7 @@ def main():
             f.write("GA Configuration\n")
             f.write("----------------\n")
             f.write(f"  Warmup Epochs:       {config.refinement_warmup_epochs}\n")
+            f.write(f"  Refinement Interval: {config.refinement_interval}\n")
             f.write(f"  Training Pop Size:   {config.training_refiner_pop}\n")
             f.write(f"  Training Generations:{config.training_refiner_gens}\n")
             f.write(f"  Op Weights:          {config.refinement_op_weights}\n\n")
